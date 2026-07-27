@@ -1,0 +1,94 @@
+---
+import { getDict, type Locale } from '../i18n';
+import WaveDivider from './WaveDivider.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dict = getDict(locale);
+
+// FormSubmit経由でメール送信される。
+// 宛先メモ：本来は mizushima@otonaki.com にしたいが、お名前.com側でFormSubmitの
+// 認証メールが届かないため、Gmailで運用中（2026-07-13）。Gmailの自動転送でotonakiにも届けられる。
+// 宛先変更時は初回送信で届く認証メールの Activate を踏むこと。
+const FORM_ACTION = 'https://formsubmit.co/nelsoning0214@gmail.com';
+---
+
+<section id="contact" class="scroll-mt-24 bg-gajumaru-mist">
+  <WaveDivider position="top" />
+  <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+    <h2 class="fade-in font-serif text-2xl font-semibold text-umi-deep sm:text-3xl">
+      {dict.contact.heading}
+    </h2>
+    <p
+      class="fade-in mt-4 text-[0.9375rem] leading-loose text-ink sm:text-base"
+      set:html={dict.contact.lead}
+    />
+    <!-- 話題チップ：吹き出し風にして「おしゃべり」の空気を出す -->
+    <ul class="fade-in mt-6 flex flex-wrap gap-2.5">
+      {
+        dict.contact.topics.map((topic) => (
+          <li class="speech-chip rounded-2xl border border-gajumaru/40 bg-card px-4 py-1.5 text-sm text-gajumaru">
+            {topic}
+          </li>
+        ))
+      }
+    </ul>
+
+    <form
+      id="contact-form"
+      action={FORM_ACTION}
+      method="post"
+      class="fade-in mt-10 max-w-xl space-y-5"
+    >
+      <div>
+        <label for="name" class="block text-sm text-ink">{dict.contact.form.name}</label>
+        <input
+          id="name"
+          name="お名前"
+          type="text"
+          required
+          autocomplete="name"
+          class="mt-1.5 w-full rounded-lg border border-sand bg-card px-4 py-2.5 text-[0.9375rem] focus:border-umi focus:ring-2 focus:ring-umi/30 focus:outline-none"
+        />
+      </div>
+      <div>
+        <label for="email" class="block text-sm text-ink">{dict.contact.form.email}</label>
+        <input
+          id="email"
+          name="メールアドレス"
+          type="email"
+          required
+          autocomplete="email"
+          class="mt-1.5 w-full rounded-lg border border-sand bg-card px-4 py-2.5 text-[0.9375rem] focus:border-umi focus:ring-2 focus:ring-umi/30 focus:outline-none"
+        />
+      </div>
+      <div>
+        <label for="message" class="block text-sm text-ink">{dict.contact.form.message}</label>
+        <textarea
+          id="message"
+          name="ご用件"
+          rows="5"
+          required
+          class="mt-1.5 w-full rounded-lg border border-sand bg-card px-4 py-2.5 text-[0.9375rem] focus:border-umi focus:ring-2 focus:ring-umi/30 focus:outline-none"
+        ></textarea>
+      </div>
+
+      <!-- FormSubmit用設定：件名・スパム対策（_honeyはhoneypot、_captchaは無効化） -->
+      <input type="hidden" name="_subject" value="サイトからのお問い合わせ" />
+      <input type="hidden" name="_captcha" value="false" />
+      <div class="hidden" aria-hidden="true">
+        <input name="_honey" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <button
+        type="submit"
+        class="hover-lift rounded-full bg-umi px-8 py-3 text-sm text-paper hover:bg-umi-deep hover:shadow-md"
+      >
+        {dict.contact.form.submit}
+      </button>
+    </form>
+  </div>
+</section>

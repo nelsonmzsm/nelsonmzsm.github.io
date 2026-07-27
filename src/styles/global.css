@@ -1,0 +1,228 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/*
+  デザイントークン：アースカラー（海・赤土・ガジュマル）
+  目に優しく、読み疲れしないコントラストを最優先。
+*/
+@theme {
+  /* 紙のような背景と、墨のような文字色 */
+  --color-paper: #f7f0e0;
+  --color-card: #fffdf7;
+  --color-ink: #38332b;
+  --color-ink-soft: #6a6255;
+  --color-sand: #d9caa8;
+
+  /* 海：メインアクセント */
+  --color-umi: #2a6d71;
+  --color-umi-deep: #17474b;
+  --color-umi-mist: #cbe2df;
+
+  /* 赤土：強調・リンクホバー */
+  --color-akatsuchi: #ab4d2a;
+  --color-akatsuchi-mist: #f0d6c1;
+
+  /* ガジュマル：補助色 */
+  --color-gajumaru: #4d6342;
+  --color-gajumaru-mist: #d6e0bf;
+
+  /* 金（きん）：新聞・古紙を思わせる黄土色。寄稿・連載カテゴリのアクセント */
+  --color-kin: #a17f2e;
+  --color-kin-mist: #e8dcb8;
+
+  --font-sans: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Yu Gothic",
+    sans-serif;
+  --font-serif: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+}
+
+/* ページ内リンクのスクロールは Base.astro のJSがイージング制御する
+   （CSSのscroll-behavior:smoothはJS制御と競合するため使わない） */
+
+/* 文字サイズ切替（ヘッダーの「あ」ボタン）。既定は真ん中の「標準」＝従来の「大」相当。
+   rem基準なのでレイアウト全体が追従する */
+html {
+  font-size: 122%;
+}
+html[data-fontsize='small'] {
+  font-size: 100%;
+}
+html[data-fontsize='large'] {
+  font-size: 145%;
+}
+
+/* 日本語の見出しのみ文節単位で折り返す（auto-phraseはChrome系のみ）。
+   本文は通常の折り返しにして、行末の位置が揃うようにする
+   ——文節改行を本文にかけると右端がガタガタになるため */
+/* balance は「早めに折り返して2行を均等にする」挙動で不自然な改行に見えるため使わない。
+   折り返しが必要なときだけ、文節単位（auto-phrase）で折る */
+:lang(ja) h2,
+:lang(ja) h3,
+:lang(ja) h4 {
+  word-break: auto-phrase;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.9;
+  letter-spacing: 0.02em;
+}
+
+/* スクロールで「フワッ」と現れる控えめなアニメーション */
+.fade-in {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.8s ease-out,
+    transform 0.8s ease-out;
+}
+
+.fade-in.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 外部リンク（別タブで開くもの）には「枠から矢印が飛び出す」定番アイコンを添える */
+a[target='_blank']::after {
+  content: '';
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-left: 0.22em;
+  vertical-align: -0.02em;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3Cpolyline points='15 3 21 3 21 9'/%3E%3Cline x1='10' y1='14' x2='21' y2='3'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+  mask: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3Cpolyline points='15 3 21 3 21 9'/%3E%3Cline x1='10' y1='14' x2='21' y2='3'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+}
+
+/* 見出しのキーワードに引く、蛍光ペン風のマーカー（マンガ的なキレの要素） */
+.marker {
+  background-image: linear-gradient(
+    transparent 62%,
+    #ecd05e 62%,
+    #ecd05e 94%,
+    transparent 94%
+  );
+  padding: 0 0.1em;
+}
+
+/* ヒーロー文中の3色ハイライト（.markerと同じ蛍光ペン意匠。色だけ各時期のテーマカラーに） */
+.marker-umi,
+.marker-akatsuchi,
+.marker-gajumaru {
+  padding: 0 0.1em;
+}
+.marker-umi {
+  background-image: linear-gradient(
+    transparent 62%,
+    var(--color-umi-mist) 62%,
+    var(--color-umi-mist) 94%,
+    transparent 94%
+  );
+}
+.marker-akatsuchi {
+  background-image: linear-gradient(
+    transparent 62%,
+    var(--color-akatsuchi-mist) 62%,
+    var(--color-akatsuchi-mist) 94%,
+    transparent 94%
+  );
+}
+.marker-gajumaru {
+  background-image: linear-gradient(
+    transparent 62%,
+    var(--color-gajumaru-mist) 62%,
+    var(--color-gajumaru-mist) 94%,
+    transparent 94%
+  );
+}
+
+/* Contactの話題チップを吹き出し風に */
+.speech-chip {
+  position: relative;
+  border-bottom-left-radius: 4px;
+}
+
+/* Heroの背景の色面が、ゆっくり漂う */
+.float-slow {
+  animation: floaty 14s ease-in-out infinite;
+}
+.float-slower {
+  animation: floaty 20s ease-in-out infinite reverse;
+}
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(12px, -18px);
+  }
+}
+
+/* ホバーの動きも「じわー」系に統一する共通クラス。
+   カクッと動かさず、ゆっくり浮いて（0.6s）、ゆっくり戻る */
+.hover-lift {
+  transition:
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.45s ease,
+    border-color 0.45s ease,
+    color 0.45s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+/* 写真がじわーっと拡大⇔縮小を往復する（ケンバーンズ効果）。
+   animation-duration / direction は要素側の style で個別調整できる */
+.kenburns {
+  animation: kenburns 24s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+/* 右下のドリアン：マウスを乗せるとブルブルと震える */
+#to-top:hover img {
+  animation: durianShake 0.35s ease-in-out infinite;
+}
+@keyframes durianShake {
+  0%,
+  100% {
+    transform: rotate(0deg) translateX(0);
+  }
+  20% {
+    transform: rotate(-9deg) translateX(-1.5px);
+  }
+  40% {
+    transform: rotate(9deg) translateX(1.5px);
+  }
+  60% {
+    transform: rotate(-7deg) translateX(-1px);
+  }
+  80% {
+    transform: rotate(7deg) translateX(1px);
+  }
+}
+
+/* 波の区切りが海のようにゆっくり横へ流れる */
+.wave-drift {
+  animation: waveDrift 18s linear infinite;
+}
+@keyframes waveDrift {
+  to {
+    transform: translateX(-1440px);
+  }
+}
+
+/* 注：装飾アニメーションはOSの「動きを減らす」設定に関わらず動かす方針（クライアント要望） */

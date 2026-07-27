@@ -1,0 +1,124 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import { CATEGORIES } from '../../data/categories';
+import { SITE } from '../../data/site';
+import { getDict } from '../../i18n';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects', ({ data }) =>
+    import.meta.env.PROD ? !data.draft : true
+  );
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+
+// 記事本文は日本語のみのため、詳細ページは日本語ロケール固定
+const dict = getDict('ja');
+const category = CATEGORIES.find((c) => c.id === project.data.category);
+const categoryLabel = dict.projects.categories[project.data.category].label;
+const ogImage = project.data.thumbnail?.[0]?.src ?? SITE.ogImage;
+---
+
+<Base
+  locale="ja"
+  title={`${project.data.title}｜${SITE.name}`}
+  description={project.data.summary}
+  ogImage={ogImage}
+  ogType="article"
+>
+  <main>
+    <article class="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-20">
+      <a
+        href="/#projects"
+        class="text-sm text-ink-soft transition-colors duration-300 hover:text-akatsuchi"
+      >
+        ← {dict.projects.heading} 一覧へ
+      </a>
+
+      <header class="mt-8">
+        <p class="flex flex-wrap items-center gap-3 text-xs tracking-wider text-ink-soft">
+          {
+            category && (
+              <span class="flex items-center gap-1.5">
+                <span aria-hidden="true" class={`h-2 w-2 rounded-full ${category.accent}`} />
+                {categoryLabel}
+              </span>
+            )
+          }
+          <span>{project.data.period}</span>
+        </p>
+        <h1
+          class="mt-4 font-serif text-3xl leading-relaxed font-bold text-umi-deep sm:text-4xl sm:leading-relaxed"
+        >
+          {project.data.title}
+        </h1>
+        <p class="mt-4 text-[0.9375rem] leading-loose text-ink-soft sm:text-base">
+          {project.data.summary}
+        </p>
+      </header>
+
+      {
+        project.data.thumbnail && project.data.thumbnail.length === 1 && (
+          <Image
+            src={project.data.thumbnail[0]}
+            alt=""
+            widths={[720, 1440]}
+            sizes="(min-width: 768px) 720px, 100vw"
+            class="mt-10 w-full rounded-xl"
+          />
+        )
+      }
+      {
+        project.data.thumbnail && project.data.thumbnail.length > 1 && (
+          <!-- 写真が複数あるときは、一覧性を優先してグリッドで並べる。
+               縦長写真もトリミングされないよう、同じ写真を拡大＋ぼかした背景の上にcontainで重ねる -->
+          <div class="mt-10 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+            {project.data.thumbnail.map((img) => (
+              <div class="relative aspect-video w-full overflow-hidden rounded-lg bg-paper">
+                <Image
+                  src={img}
+                  alt=""
+                  width={200}
+                  aria-hidden="true"
+                  class="absolute inset-0 h-full w-full scale-110 object-contain blur-2xl"
+                />
+                <Image
+                  src={img}
+                  alt=""
+                  widths={[400, 800]}
+                  sizes="(min-width: 768px) 33vw, 50vw"
+                  class="absolute inset-0 h-full w-full object-contain"
+                />
+              </div>
+            ))}
+          </div>
+        )
+      }
+
+      <!-- 記事タイトル(h1)より本文見出し(h2/h3)がはっきり小さく・軽く見えるよう明示指定する -->
+      <div
+        class="prose prose-neutral mt-10 max-w-none text-ink prose-headings:font-serif prose-headings:font-semibold prose-headings:text-umi-deep prose-h2:text-lg prose-h2:sm:text-xl prose-h3:text-base prose-h3:sm:text-lg prose-a:text-akatsuchi prose-strong:text-ink"
+      >
+        <Content />
+      </div>
+
+      <footer class="mt-14 border-t border-sand pt-8">
+        <p class="text-sm leading-loose text-ink-soft">
+          この取り組みについて聞いてみたいことがあれば、
+          <a href="/#contact" class="text-akatsuchi underline underline-offset-4">お気軽にどうぞ</a>。
+        </p>
+        <p class="mt-2 text-sm leading-loose text-ink-soft">
+          この取り組みが生まれた人生のストーリーは
+          <a href="/#about" class="text-akatsuchi underline underline-offset-4">「わたしのこと」</a>から。
+        </p>
+      </footer>
+    </article>
+  </main>
+</Base>

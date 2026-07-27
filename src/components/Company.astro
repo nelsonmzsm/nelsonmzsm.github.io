@@ -1,0 +1,57 @@
+---
+import { COMPANY_VALUES, COMPANY_SLOGAN } from '../data/company';
+import { getDict, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dict = getDict(locale);
+
+const rows = (
+  [
+    ['name', COMPANY_VALUES.name],
+    ['philosophy', COMPANY_SLOGAN],
+    ['representative', COMPANY_VALUES.representative],
+    ['founded', COMPANY_VALUES.founded],
+    ['locationHq', COMPANY_VALUES.locationHq],
+    ['locationTokyo', COMPANY_VALUES.locationTokyo],
+    ['business', COMPANY_VALUES.business],
+  ] as const
+).map(([key, value]) => ({ label: dict.company.labels[key], value }));
+---
+
+<section id="company" class="scroll-mt-24">
+  <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+    <h2 class="fade-in font-serif text-2xl font-semibold text-umi-deep sm:text-3xl">
+      {dict.company.heading}
+    </h2>
+    <p class="fade-in mt-4 max-w-4xl text-[0.9375rem] leading-loose text-ink-soft sm:text-base">
+      {dict.company.lead}
+    </p>
+
+    <!-- 信用担保のための情報。トーンを邪魔しないよう折りたたみで置く -->
+    <details class="fade-in group mt-8 rounded-xl border border-sand bg-card">
+      <summary
+        class="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm text-ink transition-colors hover:text-akatsuchi sm:px-6"
+      >
+        <span>{dict.company.toggle}</span>
+        <span
+          aria-hidden="true"
+          class="text-ink-soft transition-transform duration-200 group-open:rotate-180">▾</span
+        >
+      </summary>
+      <dl class="border-t border-sand px-5 py-4 sm:px-6">
+        {
+          rows.map((row) => (
+            <div class="flex flex-col gap-0.5 py-2.5 text-sm sm:flex-row sm:gap-6">
+              <dt class="w-32 shrink-0 text-ink-soft">{row.label}</dt>
+              <dd class="text-ink">{row.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </details>
+  </div>
+</section>

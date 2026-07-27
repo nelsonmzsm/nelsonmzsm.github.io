@@ -1,0 +1,42 @@
+---
+import { Image } from 'astro:assets';
+import { SITE } from '../data/site';
+import { getDict, type Locale } from '../i18n';
+import durian from '../assets/durian.png';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dict = getDict(locale);
+const year = new Date().getFullYear();
+
+// フッターは名前＋タグラインのみ（肩書きの小書きはヘッダーだけに置く）
+const jaLike = locale === 'ja' || locale === 'easy';
+const brandName = jaLike ? 'ネルソン水嶋' : 'Nelson Mizushima';
+---
+
+<footer class="border-t border-sand/70 bg-umi-mist/70">
+  <div class="mx-auto max-w-6xl px-4 py-10 text-center sm:px-6">
+    <div class="inline-block">
+      <!-- 遊び心：名前にホバーすると、ドリアンマンがひょっこり現れる -->
+      <p class="group relative mt-0.5 block font-serif text-lg text-umi-deep">
+      <span
+        class="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 opacity-0 transition-all duration-500 group-hover:-top-11 group-hover:opacity-100"
+        aria-hidden="true"
+        title="ドリアンマン、参上。"
+      >
+        <Image src={durian} alt="" width={68} densities={[1, 2]} class="h-8 w-auto" />
+      </span>
+        {brandName}
+      </p>
+    </div>
+    <p class="mt-2 text-xs leading-relaxed text-ink-soft">
+      {dict.footer.tagline}
+    </p>
+    <p class="mt-6 text-xs text-ink-soft">
+      © {year} {SITE.companyName}
+    </p>
+  </div>
+</footer>

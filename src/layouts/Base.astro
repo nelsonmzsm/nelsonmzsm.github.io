@@ -1,0 +1,244 @@
+---
+import '../styles/global.css';
+import { Image } from 'astro:assets';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import durian from '../assets/durian.png';
+import { SITE } from '../data/site';
+import { COMPANY_VALUES, COMPANY_SLOGAN } from '../data/company';
+import { getDict, LOCALES, type Locale } from '../i18n';
+
+interface Props {
+  locale?: Locale;
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  ogType?: 'website' | 'article';
+  /** トップページ（4言語版がある）のときだけ hreflang を出す */
+  isHome?: boolean;
+}
+
+const {
+  locale = 'ja',
+  ogImage = SITE.ogImage,
+  ogType = 'website',
+  isHome = false,
+} = Astro.props;
+
+const dict = getDict(locale);
+const title = Astro.props.title ?? dict.meta.title;
+const description = Astro.props.description ?? dict.meta.description;
+const htmlLang = LOCALES.find((l) => l.code === locale)!.htmlLang;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImageUrl = new URL(ogImage, Astro.site);
+
+// 指名検索（「ネルソン水嶋」「水嶋健」「合同会社オトナキ」）対策の構造化データ
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Person',
+      name: SITE.legalName,
+      alternateName: SITE.name,
+      url: SITE.url,
+      jobTitle: '“あいだ”の編集者（ライター・編集者／多文化共生マネージャー／社会教育士）',
+      worksFor: { '@id': `${SITE.url}/#organization` },
+      sameAs: [SITE.sns.x, SITE.sns.facebook].filter(Boolean),
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${SITE.url}/#organization`,
+      name: COMPANY_VALUES.name,
+      url: SITE.url,
+      founder: { '@type': 'Person', name: SITE.legalName },
+      slogan: COMPANY_SLOGAN,
+    },
+  ],
+};
+---
+
+<!doctype html>
+<html lang={htmlLang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    {
+      isHome && (
+        <>
+          {LOCALES.filter((l) => l.code !== 'easy').map((l) => (
+            <link rel="alternate" hreflang={l.htmlLang} href={new URL(l.path, Astro.site)} />
+          ))}
+          <link rel="alternate" hreflang="x-default" href={new URL('/', Astro.site)} />
+        </>
+      )
+    }
+
+    <!-- 選んだ文字サイズを描画前に復元する（ちらつき防止のため inline） -->
+    <script is:inline>
+      try {
+        var fs = localStorage.getItem('fontsize');
+        if (fs === 'xlarge') fs = 'large'; // 旧3段階からの移行
+        if (fs === 'small' || fs === 'large') {
+          document.documentElement.dataset.fontsize = fs;
+        }
+      } catch (e) {}
+    </script>
+
+    <!-- OGP -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:site_name" content={SITE.title} />
+    <meta property="og:locale" content="ja_JP" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- フォント：見出し=明朝（Shippori Mincho）、本文=ゴシック（Zen Kaku Gothic New） -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+    <!-- Cloudflare Web Analytics：デプロイ後にトークンを設定して有効化する
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "YOUR_TOKEN"}'></script>
+    -->
+  </head>
+  <body>
+    <Header locale={locale} />
+    <slot />
+    <Footer locale={locale} />
+
+    <!-- ドリアンマンの「上へ戻る」ボタン：少しスクロールすると現れる -->
+    <button
+      id="to-top"
+      aria-label={dict.a11y.toTop}
+      title={dict.a11y.toTop}
+      class="fixed right-4 bottom-4 z-50 translate-y-4 opacity-0 transition-all duration-500 ease-out hover:-translate-y-1 sm:right-6 sm:bottom-6"
+      style="pointer-events: none;"
+    >
+      <!-- 白い台座は付けず、透過PNGのドリアンをそのまま浮かせる（視認性はドロップシャドウで確保） -->
+      <Image
+        src={durian}
+        alt=""
+        width={96}
+        densities={[1, 2]}
+        class="h-12 w-auto drop-shadow-[0_3px_6px_rgba(56,51,43,0.35)]"
+      />
+    </button>
+
+    <script>
+      // 外部リンク（記事本文のMarkdownリンク含む）は自動で別タブ＋noopenerにする。
+      // target="_blank" が付くことで、CSSの外部リンクアイコン（↗）も自動表示される
+      document.querySelectorAll<HTMLAnchorElement>('a[href^="http"]').forEach((a) => {
+        if (new URL(a.href).origin !== location.origin) {
+          a.target = '_blank';
+          a.rel = 'noopener';
+        }
+      });
+
+      // 写真が複数あるカード／タイムライン画像を数秒おきにクロスフェード切り替え。
+      // 同じクラスが何箇所にもあるため、コンテナごとに独立したタイマーを持たせる。
+      document.querySelectorAll<HTMLElement>('.thumb-slideshow').forEach((container) => {
+        const slides = Array.from(container.querySelectorAll<HTMLElement>('[data-slide]'));
+        if (slides.length < 2) return;
+        let i = 0;
+        setInterval(() => {
+          slides[i].style.opacity = '0';
+          i = (i + 1) % slides.length;
+          slides[i].style.opacity = '1';
+        }, 3500);
+      });
+
+      // スクロールで .fade-in をフワッと表示
+      const targets = document.querySelectorAll('.fade-in');
+      if (!('IntersectionObserver' in window)) {
+        targets.forEach((el) => el.classList.add('is-visible'));
+      } else {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+              }
+            }
+          },
+          { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+        );
+        targets.forEach((el) => observer.observe(el));
+      }
+
+      // ページ内リンクは瞬間移動ではなく、スーッとスライドしてピタッと止まる。
+      // 出だしは滑らかに加速し、後半しっかり減速して着地するイージング（easeInOutQuart）。
+      // 注意1：CSSのscroll-behavior:smoothとは競合するため、scrollToは必ずbehavior:'instant'で呼ぶ。
+      // 注意2：OSの「アニメーション効果オフ」でも動かす（クライアントの明示要望。フェード演出はオフのまま）。
+      const easeInOutQuart = (t: number) =>
+        t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
+
+      const smoothScrollTo = (to: number) => {
+        const from = window.scrollY;
+        const dist = to - from;
+        if (Math.abs(dist) < 2) return;
+        // 距離に応じて 550〜1200ms。近くは軽く、遠くはゆったり
+        const duration = Math.min(1200, Math.max(550, Math.abs(dist) * 0.4));
+        const start = performance.now();
+        const step = (now: number) => {
+          const p = Math.min(1, (now - start) / duration);
+          window.scrollTo({
+            top: from + dist * easeInOutQuart(p),
+            behavior: 'instant',
+          });
+          if (p < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      };
+
+      const header = document.querySelector('header');
+      document.addEventListener('click', (e) => {
+        const link = (e.target as Element).closest?.(
+          'a[href*="#"]'
+        ) as HTMLAnchorElement | null;
+        if (!link) return;
+        const url = new URL(link.href);
+        if (url.pathname !== location.pathname || !url.hash) return;
+        const target = document.querySelector(url.hash);
+        if (!target) return;
+        e.preventDefault();
+        const offset = (header?.offsetHeight ?? 0) + 12;
+        const top =
+          target.getBoundingClientRect().top + window.scrollY - offset;
+        smoothScrollTo(Math.max(0, top));
+        history.pushState(null, '', url.hash);
+      });
+
+      // 「上へ戻る」ボタンの表示切替
+      const toTop = document.getElementById('to-top');
+      if (toTop) {
+        const toggle = () => {
+          const show = window.scrollY > 400;
+          toTop.classList.toggle('opacity-0', !show);
+          toTop.classList.toggle('translate-y-4', !show);
+          toTop.style.pointerEvents = show ? 'auto' : 'none';
+        };
+        window.addEventListener('scroll', toggle, { passive: true });
+        toggle();
+        toTop.addEventListener('click', () => {
+          // スマホではタップ時に短くブルッと震えてからトップへ（対応端末のみ）
+          navigator.vibrate?.(40);
+          smoothScrollTo(0);
+        });
+      }
+    </script>
+  </body>
+</html>

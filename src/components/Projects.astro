@@ -1,0 +1,61 @@
+---
+import { getCollection } from 'astro:content';
+import { CATEGORIES } from '../data/categories';
+import { getDict, type Locale } from '../i18n';
+import ProjectCard from './ProjectCard.astro';
+import WaveDivider from './WaveDivider.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dict = getDict(locale);
+
+// 本番ビルドでは draft: true の取り組みを除外する（開発中はプレビューできる）
+const allProjects = await getCollection('projects', ({ data }) =>
+  import.meta.env.PROD ? !data.draft : true
+);
+
+const byCategory = CATEGORIES.map((category) => ({
+  ...category,
+  ...dict.projects.categories[category.id],
+  projects: allProjects
+    .filter((p) => p.data.category === category.id)
+    .sort((a, b) => a.data.order - b.data.order),
+})).filter((c) => c.projects.length > 0);
+---
+
+<section id="projects" class="scroll-mt-24 bg-umi-mist">
+  <WaveDivider position="top" />
+  <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+    <h2 class="fade-in font-serif text-2xl font-semibold text-umi-deep sm:text-3xl">
+      {dict.projects.heading}
+    </h2>
+    {
+      dict.projects.jaOnlyNote && (
+        <p class="fade-in mt-3 text-sm text-ink-soft">※ {dict.projects.jaOnlyNote}</p>
+      )
+    }
+
+    {
+      byCategory.map((category) => (
+        <div class="mt-14 scroll-mt-24" id={`projects-${category.id}`}>
+          <div class="fade-in flex items-center gap-3">
+            <span aria-hidden="true" class={`h-2.5 w-2.5 shrink-0 rounded-full ${category.accent}`} />
+            <h3 class="font-serif text-lg font-semibold text-ink sm:text-xl">{category.label}</h3>
+          </div>
+          <!-- スマホでも一度に2〜4件は視界に入るよう、常に最低2カラムを維持する -->
+          <div class="mt-5 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-5 lg:grid-cols-4">
+            {category.projects.map((project, i) => (
+              <div class="fade-in" style={`transition-delay: ${i * 80}ms`}>
+                <ProjectCard project={project} accent={category.accent} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+  <WaveDivider position="bottom" />
+</section>

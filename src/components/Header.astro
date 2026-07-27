@@ -1,0 +1,164 @@
+---
+import { getDict, localePath, LOCALES, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dict = getDict(locale);
+const prefix = localePath(locale);
+
+// ロゴ：上段に小さく肩書き、下段に名前
+const jaLike = locale === 'ja' || locale === 'easy';
+const brandCatch = jaLike ? '“あいだ”の編集者こと' : 'Editor of the In-Between';
+const brandName = jaLike ? 'ネルソン水嶋' : 'Nelson Mizushima';
+
+// ご相談はナビではなく常時表示のCTAボタンにする（下のマークアップ参照）
+const nav = [
+  { href: `${prefix}#about`, label: dict.nav.about },
+  { href: `${prefix}#projects`, label: dict.nav.projects },
+  { href: `${prefix}#services`, label: dict.nav.services },
+  { href: `${prefix}#company`, label: dict.nav.company },
+];
+
+// 真ん中（normal）が既定サイズ。小さく／標準／大きく の3段階
+const fontButtons = [
+  { size: 'small', label: dict.toolbar.fontSmall, cls: 'text-xs' },
+  { size: 'normal', label: dict.toolbar.fontNormal, cls: 'text-base' },
+  { size: 'large', label: dict.toolbar.fontLarge, cls: 'text-xl' },
+];
+---
+
+<header class="sticky top-0 z-50 border-b border-sand/70 bg-paper/90 backdrop-blur-sm">
+  <div class="mx-auto max-w-6xl px-4 pt-2.5 pb-2 sm:px-6">
+    <!-- 上段：名前＋閲覧支援ツールバー（ことば・文字サイズ） -->
+    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
+      <a href={prefix} class="inline-block">
+        <!-- 上段：小さく肩書き。均等割り付けで下段の名前と横幅を揃える（日本語のみ） -->
+        <span
+          class="block text-[0.65rem] leading-tight text-ink-soft"
+          style={jaLike ? 'text-align: justify; text-align-last: justify;' : ''}
+        >
+          {brandCatch}
+        </span>
+        <!-- 下段：名前。日本語は均等割り付けで上段と横幅を完全に揃える -->
+        <span
+          class="block font-serif text-base font-semibold text-umi-deep sm:text-lg"
+          style={jaLike ? 'text-align: justify; text-align-last: justify;' : ''}
+        >
+          {brandName}
+        </span>
+      </a>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- ご相談CTA：ヘッダー固定なので、サイトのどこからでもワンクリックで飛べる -->
+        <a
+          href={`${prefix}#contact`}
+          class="hover-lift inline-block rounded-full bg-akatsuchi px-4 py-1.5 text-xs text-paper hover:bg-umi-deep sm:text-sm"
+        >
+          {dict.nav.contact}
+        </a>
+        <!-- ことば（言語）切替 -->
+        <details class="relative" id="lang-menu">
+          <summary
+            class="flex min-h-9 cursor-pointer list-none items-center gap-1.5 rounded-full border border-sand bg-card px-3 py-1 text-xs text-ink transition-colors hover:border-umi sm:text-sm"
+          >
+            <span aria-hidden="true">🌐</span>
+            {dict.toolbar.language}
+            <span aria-hidden="true" class="text-ink-soft">▾</span>
+          </summary>
+          <ul
+            class="absolute right-0 z-50 mt-2 max-h-[70vh] w-52 overflow-y-auto rounded-xl border border-sand bg-card py-1 shadow-lg"
+          >
+            {
+              LOCALES.map((l) => (
+                <li>
+                  <a
+                    href={l.path}
+                    aria-current={l.code === locale ? 'page' : undefined}
+                    class:list={[
+                      'block px-4 py-2.5 text-sm transition-colors hover:bg-umi-mist',
+                      l.code === locale ? 'font-bold text-umi-deep' : 'text-ink',
+                    ]}
+                  >
+                    {l.code === locale && <span aria-hidden="true">✓ </span>}
+                    {l.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </details>
+
+        <!-- 文字サイズ切替：「あ」が段々大きくなるボタン -->
+        <div
+          class="flex items-center overflow-hidden rounded-full border border-sand bg-card"
+          role="group"
+          aria-label={dict.toolbar.fontSize}
+        >
+          {
+            fontButtons.map((btn) => (
+              <button
+                type="button"
+                data-fontsize={btn.size}
+                aria-label={`${dict.toolbar.fontSize}: ${btn.label}`}
+                title={btn.label}
+                class={`fontsize-btn flex h-9 w-9 items-center justify-center leading-none text-ink-soft transition-colors hover:bg-umi-mist aria-pressed:bg-umi aria-pressed:text-paper ${btn.cls}`}
+              >
+                あ
+              </button>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- 下段：セクションナビ -->
+    <nav aria-label="サイト内" class="mt-1.5">
+      <ul class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem] text-ink-soft sm:gap-x-6 sm:text-sm">
+        {
+          nav.map((item) => (
+            <li>
+              <a href={item.href} class="inline-block py-1 transition-colors duration-300 hover:text-akatsuchi">
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<script>
+  // 文字サイズ切替：html[data-fontsize] を書き換え、localStorage に保存する
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.fontsize-btn');
+  const apply = (size: string) => {
+    if (size === 'normal') {
+      delete document.documentElement.dataset.fontsize;
+    } else {
+      document.documentElement.dataset.fontsize = size;
+    }
+    buttons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.fontsize === size))
+    );
+    try {
+      localStorage.setItem('fontsize', size);
+    } catch (e) {}
+  };
+  buttons.forEach((b) => {
+    b.addEventListener('click', () => apply(b.dataset.fontsize ?? 'normal'));
+  });
+  // 初期状態のボタン表示（サイズ自体は Base.astro の inline script で復元済み）
+  const current = document.documentElement.dataset.fontsize ?? 'normal';
+  buttons.forEach((b) =>
+    b.setAttribute('aria-pressed', String(b.dataset.fontsize === current))
+  );
+
+  // 言語メニュー：外側をクリックしたら閉じる
+  const menu = document.getElementById('lang-menu') as HTMLDetailsElement | null;
+  document.addEventListener('click', (e) => {
+    if (menu?.open && !menu.contains(e.target as Node)) menu.open = false;
+  });
+</script>

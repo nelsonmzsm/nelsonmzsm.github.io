@@ -1,0 +1,110 @@
+---
+import { getDict, localePath, type Locale } from '../i18n';
+import WaveDivider from './WaveDivider.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dict = getDict(locale);
+const prefix = localePath(locale);
+
+// できることの3項目は、わたしのことの4章と同じ配色にリンクさせる
+// （掘る・書く・編む＝ベトナム時代=umi／つなぐ＝沖永良部島時代=akatsuchi／つくる＝東京・現在=gajumaru）
+// 「実績を見る」は、やってきたことの該当カテゴリへ（できることの3項目とは別に4分類あるため、代表カテゴリ1つに紐づける）
+const itemStyles = [
+  { bg: 'bg-umi-mist', stroke: 'text-umi-deep', projectCategory: 'mediaOps' },
+  { bg: 'bg-akatsuchi-mist', stroke: 'text-akatsuchi', projectCategory: 'tabunka' },
+  { bg: 'bg-gajumaru-mist', stroke: 'text-gajumaru', projectCategory: 'digital' },
+];
+
+const items = dict.services.items.map((item, i) => ({ ...item, ...itemStyles[i] }));
+---
+
+<section id="services" class="scroll-mt-24 bg-akatsuchi-mist">
+  <WaveDivider position="top" />
+  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+    <h2 class="fade-in font-serif text-2xl font-semibold text-umi-deep sm:text-3xl">
+      {dict.services.heading}
+    </h2>
+    {
+      dict.services.note && (
+        <p
+          class="fade-in mt-4 max-w-4xl text-[0.9375rem] leading-loose text-ink sm:text-base"
+          set:html={dict.services.note}
+        />
+      )
+    }
+
+    <!-- スマホは1カラム縦積み、PC(sm以上)は3カラム。
+         アイコンを左に固定し、その高さの範囲に小見出し＋事例を並べる。
+         「実績を見る」だけは横幅いっぱいを使って、カードの下端に配置する -->
+    <!-- 3カラムはPC幅（lg=1024px）からのみ。スマホはもちろん、640〜1023pxのタブレット幅でも
+         1カラムのままにして、カードが窮屈にならないようにする -->
+    <div class="mt-8 grid gap-5 lg:grid-cols-3">
+      {
+        items.map((item, i) => (
+          <div class="fade-in h-full" style={`transition-delay: ${i * 80}ms`}>
+            <div class="flex h-full flex-col rounded-xl border border-sand bg-card p-5 sm:p-6">
+              <div class="flex flex-1 gap-4">
+                <span
+                  aria-hidden="true"
+                  class={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full sm:h-14 sm:w-14 ${item.bg} ${item.stroke}`}
+                >
+                  {i === 0 && (
+                    <svg width="26" height="26" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M19.5 4.5 l4 4 L10 22 l-5.5 1.5 L6 18 Z" />
+                      <path d="M16.5 7.5 l4 4" />
+                      <path d="M15 24 h8" />
+                    </svg>
+                  )}
+                  {i === 1 && (
+                    <svg width="27" height="27" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M2.5 8 a2.5 2.5 0 0 1 2.5 -2.5 h9 a2.5 2.5 0 0 1 2.5 2.5 v6 a2.5 2.5 0 0 1 -2.5 2.5 h-6.5 l-3.5 3 v-3 h-1.5 a2.5 2.5 0 0 1 -2.5 -2.5 Z" />
+                      <path d="M13 9.5 h9 a2.5 2.5 0 0 1 2.5 2.5 v6 a2.5 2.5 0 0 1 -2.5 2.5 h-1 v3 l-3.5 -3 h-2" />
+                    </svg>
+                  )}
+                  {i === 2 && (
+                    <svg width="26" height="26" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="8" y="3.5" width="12" height="21" rx="2.5" />
+                      <path d="M12 21 h4" />
+                      <path d="M22.5 6.5 l0.7 1.8 1.8 0.7 -1.8 0.7 -0.7 1.8 -0.7 -1.8 -1.8 -0.7 1.8 -0.7 Z" fill="currentColor" stroke="none" />
+                    </svg>
+                  )}
+                </span>
+
+                <!-- アイコンの高さの範囲に、小見出し（タイトル・資格）と事例を並べる -->
+                <div class="min-w-0 flex-1">
+                  <h3 class="font-serif text-xl font-semibold text-ink">{item.title}</h3>
+                  {item.quals && (
+                    <p class="mt-0.5 text-xs leading-relaxed text-ink-soft">{item.quals}</p>
+                  )}
+                  <ul class="mt-2 space-y-1">
+                    {item.examples.map((example) => (
+                      <li class="flex gap-2 text-sm leading-relaxed text-ink">
+                        <span aria-hidden="true" class={item.stroke}>
+                          ・
+                        </span>
+                        {example}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <!-- 横幅いっぱいの「実績を見る」。上のflex-1が伸びるぶん、カードの下端に揃う -->
+              <a
+                href={`${prefix}#projects-${item.projectCategory}`}
+                class="hover-lift mt-4 block rounded-lg border border-sand py-2.5 text-center text-sm text-akatsuchi hover:bg-paper"
+              >
+                {dict.services.viewWorks} →
+              </a>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+  <WaveDivider position="bottom" />
+</section>

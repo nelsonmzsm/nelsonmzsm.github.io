@@ -1,0 +1,36 @@
+---
+/**
+ * 島の海を思わせる、ゆるやかな波形の区切り。
+ * 色付きセクションの上下に置き、紙色（paper）との境目をやわらかくする。
+ * 波は .wave-drift（global.css）で1周期ぶん（1440）ゆっくり横に流れ続ける。
+ * 同じパスを translate(1440) で複製してあるので、ループの継ぎ目は見えない。
+ */
+interface Props {
+  position: 'top' | 'bottom';
+}
+
+const { position } = Astro.props;
+
+const path =
+  position === 'top'
+    ? 'M0,24 C240,48 480,4 720,24 C960,44 1200,4 1440,24 L1440,0 L0,0 Z'
+    : 'M0,24 C240,48 480,4 720,24 C960,44 1200,4 1440,24 L1440,48 L0,48 Z';
+
+// 上下で流れる向きと速さを変えて、単調にならないようにする
+const drift =
+  position === 'top'
+    ? 'animation-duration: 18s;'
+    : 'animation-duration: 26s; animation-direction: reverse;';
+---
+
+<svg
+  class="block h-8 w-full sm:h-12"
+  viewBox="0 0 1440 48"
+  preserveAspectRatio="none"
+  aria-hidden="true"
+>
+  <g class="wave-drift" style={drift}>
+    <path d={path} fill="var(--color-paper)"></path>
+    <path transform="translate(1440)" d={path} fill="var(--color-paper)"></path>
+  </g>
+</svg>

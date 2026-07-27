@@ -1,0 +1,134 @@
+---
+import { Image } from 'astro:assets';
+import { getDict, type Locale } from '../i18n';
+import phase1 from '../assets/phase-1.png';
+import phase1b from '../assets/phase-1b.jpg';
+import phase2 from '../assets/phase-2.jpg';
+import phase3a from '../assets/phase-3a.jpg';
+import phase3b from '../assets/phase-3b.jpg';
+import phase3c from '../assets/phase-3c.jpg';
+import phase3d from '../assets/phase-3d.jpg';
+import phase4 from '../assets/phase-4.jpg';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dict = getDict(locale);
+
+// 各時期のイメージ写真（16:9横長でobject-coverするため、元画像の比率は問わない）。
+// 1枚なら静止画、複数なら数秒おきに切り替わるスライドで収める。差し替えは src/assets/phase-*
+const phaseImages = [[phase1, phase1b], [phase2], [phase3a, phase3b, phase3c, phase3d], [phase4]];
+
+// タイムラインの点の色：ヒーロー文中のハイライト色（ベトナム=umi／沖永良部島=akatsuchi／東京=gajumaru）と対応させる。
+// 第1期（SE・大喜利時代）は他の3色に比べて主張しないよう、あえて彩度の低い色にする
+const phaseDotColors = ['bg-ink-soft', 'bg-umi', 'bg-akatsuchi', 'bg-gajumaru'];
+
+// 各時期に関連する取り組みへの脚注リンク（最大3つ）。
+// 取り組みを追加したら、関連する時期にここへリンクを足すと回遊がつながる。
+// ラベルは記事と同じ日本語（記事本文が日本語のみのため、全言語共通で表示する）
+const phaseLinks: { href: string; label: string }[][] = [
+  // 第1期（東京SE時代）：Projectsに該当する取り組みはまだない
+  [],
+  // 第2期（ベトナム時代）
+  [
+    { href: '/projects/betomaru/', label: 'べとまる' },
+    { href: '/projects/kaigai-zine/', label: '海外ZINE' },
+    { href: '/projects/daily-portal-z/', label: 'デイリーポータルZ' },
+  ],
+  // 第3期（沖永良部島時代）
+  [
+    { href: '/projects/comigram/', label: 'COMIGRAM' },
+    { href: '/projects/yasashii-shima-guide/', label: 'やさしい島生活ガイド' },
+    { href: '/projects/shimamuni/', label: 'しまむに' },
+  ],
+  // 第4期（東京・現在）
+  [
+    { href: '/projects/vwriter/', label: 'VWRITER' },
+    { href: '/projects/nommunity-map/', label: '奄美群島飲ミュニティマップ' },
+  ],
+];
+---
+
+<section id="about" class="scroll-mt-24">
+  <div class="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+    <h2 class="fade-in font-serif text-2xl font-semibold text-umi-deep sm:text-3xl">
+      {dict.about.heading}
+    </h2>
+    <p
+      class="fade-in mt-4 max-w-4xl text-[0.9375rem] leading-loose text-ink-soft sm:text-base"
+      set:html={dict.about.lead}
+    />
+
+    <ol class="mt-12 space-y-10 border-l-2 border-sand pl-6 sm:pl-8">
+      {
+        dict.about.phases.map((phase, i) => (
+          <li class="fade-in relative" style={`transition-delay: ${i * 90}ms`}>
+            <span
+              aria-hidden="true"
+              class={`absolute top-2 -left-[31px] h-3 w-3 rounded-full border-2 border-paper sm:-left-[39px] ${phaseDotColors[i]}`}
+            />
+            <!-- PCでは本文と写真を横並びにして、1時期あたりの縦幅を抑える。
+                 items-stretch（デフォルト）で写真の高さを本文の高さに揃える -->
+            <div class="gap-8 lg:flex">
+              <div class="lg:flex-1">
+                <p class="text-xs tracking-widest text-akatsuchi">
+                  {phase.era}｜{phase.years}
+                </p>
+                <h3 class="mt-2 font-serif text-lg font-semibold text-ink sm:text-xl">
+                  {phase.title}
+                </h3>
+                <!-- 本文にはリンク（<a>）を含められるため set:html で描画する -->
+                <p
+                  class="mt-3 text-[0.9375rem] leading-loose text-ink sm:text-base"
+                  set:html={phase.body}
+                />
+                {phaseLinks[i].length > 0 && (
+                  <p class="mt-3 flex flex-wrap gap-x-3.5 gap-y-1 text-xs">
+                    <span class="text-ink-soft">{dict.nav.projects}：</span>
+                    {phaseLinks[i].map((link) => (
+                      <a
+                        href={link.href}
+                        class="text-akatsuchi transition-colors duration-300 hover:text-umi-deep hover:underline hover:underline-offset-4"
+                      >
+                        → {link.label}
+                      </a>
+                    ))}
+                  </p>
+                )}
+              </div>
+              {
+                phaseImages[i].length > 1 ? (
+                  <div class="thumb-slideshow relative mt-5 aspect-video w-full overflow-hidden rounded-xl lg:mt-1 lg:w-80 lg:shrink-0">
+                    {phaseImages[i].map((img, idx) => (
+                      <Image
+                        src={img}
+                        alt=""
+                        widths={[400, 800]}
+                        sizes="(min-width: 1024px) 320px, 100vw"
+                        loading="lazy"
+                        data-slide
+                        style={`opacity: ${idx === 0 ? 1 : 0}`}
+                        class="absolute inset-0 h-full w-full object-cover transition-opacity duration-1000"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <Image
+                    src={phaseImages[i][0]}
+                    alt=""
+                    widths={[400, 800]}
+                    sizes="(min-width: 1024px) 320px, 100vw"
+                    class="mt-5 aspect-video w-full rounded-xl object-cover lg:mt-1 lg:aspect-auto lg:h-full lg:w-80 lg:shrink-0"
+                    loading="lazy"
+                  />
+                )
+              }
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

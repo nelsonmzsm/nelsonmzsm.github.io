@@ -1,0 +1,183 @@
+---
+import { getImage } from 'astro:assets';
+import { getDict, localePath, type Locale } from '../i18n';
+import hero1 from '../assets/hero-1.jpg';
+import hero2 from '../assets/hero-2.jpg';
+import hero3 from '../assets/hero-3.jpg';
+import hero4 from '../assets/hero-4.jpg';
+import hero5 from '../assets/hero-5.jpg';
+import hero6 from '../assets/hero-6.jpg';
+import hero7 from '../assets/hero-7.jpg';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dict = getDict(locale);
+const prefix = localePath(locale);
+
+// 背景写真は読み込みのたびにランダムで1枚選ぶ（クライアントJSで切り替え）。
+// 候補の追加・差し替えは src/assets/hero-1〜6.jpg。
+// position: object-cover時にどこを基準に切り抜くか（人物が中央から外れている写真向け）
+const heroCandidates = [
+  { src: hero1 },
+  { src: hero2 },
+  { src: hero3 },
+  { src: hero4, position: 'left 15%' }, // 本人の頭が見切れないよう、上寄りだが少し余裕を持たせる
+  { src: hero5 },
+  { src: hero6 },
+  { src: hero7 },
+];
+const heroSources = await Promise.all(
+  heroCandidates.map(async ({ src, position }) => {
+    const [w960, w1920] = await Promise.all([
+      getImage({ src, width: 960, format: 'webp' }),
+      getImage({ src, width: 1920, format: 'webp' }),
+    ]);
+    return {
+      src: w1920.src,
+      srcset: `${w960.src} 960w, ${w1920.src} 1920w`,
+      position: position ?? 'center',
+    };
+  })
+);
+---
+
+<!--
+  雑誌の扉ページ風ヒーロー：
+  写真を画面いっぱいに大きく敷き、紙色のグラデーションを重ねて「やわらかさ」を保つ。
+  背景写真は複数候補からランダム表示（候補は src/assets/hero-1〜6.jpg）。
+-->
+<section class="relative overflow-hidden">
+  <div aria-hidden="true" class="absolute inset-0 overflow-hidden">
+    <!-- 背景写真：じわーっとズーム（kenburns）＋スクロールに遅れてついてくるパララックス。
+         上下対称に-40ずつ延ばすことで、写真の中央がヒーローの中央に来る
+         （上だけ延ばすと写真の上部が見切れる）。延長ぶんはパララックス移動時の見切れ防止も兼ねる -->
+    <div class="hero-parallax absolute inset-x-0 -top-40 -bottom-40 will-change-transform">
+      <img
+        id="hero-bg-img"
+        data-candidates={JSON.stringify(heroSources)}
+        src={heroSources[0].src}
+        srcset={heroSources[0].srcset}
+        sizes="100vw"
+        style={`object-position: ${heroSources[0].position}`}
+        alt=""
+        class="kenburns h-full w-full object-cover"
+        loading="eager"
+        fetchpriority="high"
+      />
+    </div>
+    <!-- 左（テキスト側）は紙色を濃く、右へいくほど写真が見える。下端はページ背景へ溶ける。
+         文字がどんな写真の上でも読めるよう、テキスト側の不透明度は高めに保つ -->
+    <div
+      class="absolute inset-0 bg-gradient-to-b from-paper via-paper/90 to-paper sm:bg-gradient-to-r sm:from-paper sm:via-paper/92 sm:to-paper/45"
+    >
+    </div>
+    <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-paper to-transparent"></div>
+  </div>
+
+  <!-- 余白はほどほどに：文字サイズ「大」(145%)でもファーストビューにCTAボタンが収まる範囲で、ゆとりを持たせる -->
+  <!-- 上（ファーストビュー内）はゆったり、下（近況との間）は締める -->
+  <div class="relative mx-auto max-w-6xl px-4 pt-16 pb-10 sm:px-6 sm:pt-20 sm:pb-12 lg:pt-24 lg:pb-14">
+    <div class="max-w-3xl">
+      <!-- whitespace-nowrap＋下のフィットスクリプトで、<br>区切りの2行から増えないようにする -->
+      <h1
+        id="hero-title"
+        class="fade-in font-serif text-3xl leading-normal font-semibold whitespace-nowrap text-umi-deep sm:text-4xl sm:leading-normal lg:text-5xl lg:leading-normal"
+        set:html={dict.hero.titleHtml}
+      />
+      <p
+        class="fade-in mt-6 text-[0.9375rem] leading-relaxed text-ink sm:text-base"
+        style="transition-delay: 120ms"
+        set:html={dict.hero.lead}
+      />
+      <!-- 資格・肩書きはヒーローには置かず、「できること」の各カード（quals）に移した -->
+      <div class="fade-in mt-8" style="transition-delay: 240ms">
+        <a
+          href={`${prefix}#about`}
+          class="hover-lift inline-block rounded-full bg-umi px-7 py-3 text-sm text-paper shadow-sm hover:bg-umi-deep hover:shadow-md"
+        >
+          {dict.hero.cta} ↓
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // 背景写真をランダムに1枚選んで差し込む（読み込みのたびに変わる）。
+  // 初期HTMLには1枚目の写真を仮のsrcとして焼き込んであるので、
+  // このスクリプトが万一失敗・後回しにされても背景が消えることはない。
+  // ※他の処理より先に実行し、後続の処理でエラーが起きても影響を受けないようにする。
+  try {
+    const heroImg = document.getElementById('hero-bg-img') as HTMLImageElement | null;
+    if (heroImg) {
+      const candidates = JSON.parse(heroImg.dataset.candidates || '[]') as {
+        src: string;
+        srcset: string;
+        position: string;
+      }[];
+      if (candidates.length > 0) {
+        const pick = candidates[Math.floor(Math.random() * candidates.length)];
+        heroImg.src = pick.src;
+        heroImg.srcset = pick.srcset;
+        heroImg.sizes = '100vw';
+        heroImg.style.objectPosition = pick.position;
+      }
+      delete heroImg.dataset.candidates;
+    }
+  } catch {
+    // 失敗しても、焼き込み済みの1枚目の写真がそのまま表示され続ける
+  }
+
+  // 見出しのフィット：コピーが<br>区切りの行数（2行）から増えないよう、
+  // はみ出す場合だけ文字サイズを1pxずつ縮める。
+  // 画面幅・文字サイズ設定（あボタン）・言語の全組み合わせで「ちょうど2行」を保証する。
+  const title = document.getElementById('hero-title');
+  if (title) {
+    const fit = () => {
+      // inline-block（均等割り付け）でも動くよう、親要素の幅を上限にする
+      const limit = () => title.parentElement?.clientWidth ?? title.clientWidth;
+      title.style.fontSize = '';
+      let fs = parseFloat(getComputedStyle(title).fontSize);
+      let guard = 60;
+      while (title.scrollWidth > limit() + 1 && fs > 16 && guard-- > 0) {
+        fs -= 1;
+        title.style.fontSize = `${fs}px`;
+      }
+    };
+    fit();
+    // Webフォント読み込みで幅が変わるので、読み込み完了後にもう一度
+    document.fonts?.ready.then(fit);
+    window.addEventListener('resize', fit);
+    // 文字サイズボタンで html[data-fontsize] が変わったときも再計算
+    new MutationObserver(fit).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-fontsize'],
+    });
+  }
+
+  // パララックス：スクロール量の2割ほど背景写真が遅れて追いかけてくる（奥行き感）
+  const bg = document.querySelector<HTMLElement>('.hero-parallax');
+  if (bg) {
+    let ticking = false;
+    const update = () => {
+      const y = window.scrollY;
+      if (y < window.innerHeight * 1.5) {
+        bg.style.transform = `translateY(${y * 0.22}px)`;
+      }
+      ticking = false;
+    };
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(update);
+        }
+      },
+      { passive: true }
+    );
+  }
+</script>

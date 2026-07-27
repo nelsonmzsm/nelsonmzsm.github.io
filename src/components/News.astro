@@ -1,0 +1,65 @@
+---
+import { getCollection } from 'astro:content';
+import { getDict, type Locale } from '../i18n';
+import WaveDivider from './WaveDivider.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dict = getDict(locale);
+
+// 新しい順に最新4件だけトップに載せる（本番では draft を除外）
+const items = (
+  await getCollection('news', ({ data }) => (import.meta.env.PROD ? !data.draft : true))
+)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 4);
+
+const formatDate = (d: Date) =>
+  `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+---
+
+{
+  items.length > 0 && (
+    <section id="news" class="scroll-mt-24 bg-umi-mist">
+      <WaveDivider position="top" />
+      <div class="mx-auto max-w-6xl px-4 pt-2 pb-10 sm:px-6 sm:pt-2 sm:pb-12">
+        <h2 class="fade-in font-serif text-2xl font-semibold text-umi-deep sm:text-3xl">
+          {dict.news.heading}
+        </h2>
+        <ul class="mt-8 divide-y divide-sand border-y border-sand">
+          {items.map((item, i) => (
+            <li class="fade-in" style={`transition-delay: ${i * 70}ms`}>
+              <a
+                href={`/news/${item.id}/`}
+                class="group flex flex-col gap-1 py-4 transition-colors duration-300 sm:flex-row sm:items-baseline sm:gap-8"
+              >
+                <time
+                  datetime={item.data.date.toISOString().slice(0, 10)}
+                  class="shrink-0 text-sm tracking-wider text-akatsuchi tabular-nums"
+                >
+                  {formatDate(item.data.date)}
+                </time>
+                <span class="flex-1 text-[0.9375rem] text-ink transition-colors duration-300 group-hover:text-akatsuchi sm:text-base">
+                  {item.data.title}
+                  <span
+                    aria-hidden="true"
+                    class="ml-2 inline-block transition-transform duration-500 group-hover:translate-x-1"
+                  >
+                    →
+                  </span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        {dict.projects.jaOnlyNote && (
+          <p class="fade-in mt-3 text-sm text-ink-soft">※ {dict.projects.jaOnlyNote}</p>
+        )}
+      </div>
+      <WaveDivider position="bottom" />
+    </section>
+  )
+}
