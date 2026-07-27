@@ -1,8 +1,7 @@
 ---
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import { getDict, type Locale } from '../i18n';
 import phase1 from '../assets/phase-1.png';
-import phase1b from '../assets/phase-1b.jpg';
 import phase2 from '../assets/phase-2.jpg';
 import phase3a from '../assets/phase-3a.jpg';
 import phase3b from '../assets/phase-3b.jpg';
@@ -18,8 +17,20 @@ const { locale } = Astro.props;
 const dict = getDict(locale);
 
 // 各時期のイメージ写真（16:9横長でobject-coverするため、元画像の比率は問わない）。
-// 1枚なら静止画、複数なら数秒おきに切り替わるスライドで収める。差し替えは src/assets/phase-*
-const phaseImages = [[phase1, phase1b], [phase2], [phase3a, phase3b, phase3c, phase3d], [phase4]];
+// 差し替えは src/assets/phase-*。第3期（沖永良部島）だけ複数候補があり、
+// 読み込みのたびにランダムで1枚を選ぶ（スライドはしない。ヒーロー背景と同じ方式）。
+const singleImages = [phase1, phase2, null, phase4] as const;
+
+const phase3Candidates = [phase3a, phase3b, phase3c, phase3d];
+const phase3Sources = await Promise.all(
+  phase3Candidates.map(async (src) => {
+    const [w400, w800] = await Promise.all([
+      getImage({ src, width: 400, format: 'webp' }),
+      getImage({ src, width: 800, format: 'webp' }),
+    ]);
+    return { src: w800.src, srcset: `${w400.src} 400w, ${w800.src} 800w` };
+  })
+);
 
 // タイムラインの点の色：ヒーロー文中のハイライト色（ベトナム=umi／沖永良部島=akatsuchi／東京=gajumaru）と対応させる。
 // 第1期（SE・大喜利時代）は他の3色に比べて主張しないよう、あえて彩度の低い色にする
@@ -99,24 +110,21 @@ const phaseLinks: { href: string; label: string }[][] = [
                 )}
               </div>
               {
-                phaseImages[i].length > 1 ? (
-                  <div class="thumb-slideshow relative mt-5 aspect-video w-full overflow-hidden rounded-xl lg:mt-1 lg:w-80 lg:shrink-0">
-                    {phaseImages[i].map((img, idx) => (
-                      <Image
-                        src={img}
-                        alt=""
-                        widths={[400, 800]}
-                        sizes="(min-width: 1024px) 320px, 100vw"
-                        loading="lazy"
-                        data-slide
-                        style={`opacity: ${idx === 0 ? 1 : 0}`}
-                        class="absolute inset-0 h-full w-full object-cover transition-opacity duration-1000"
-                      />
-                    ))}
-                  </div>
+                i === 2 ? (
+                  // 第3期（沖永良部島）：候補4枚からランダムに1枚を選んで表示（スライドしない）。
+                  // 初期HTMLに1枚目を焼き込んでおくので、JSが動かなくても写真は表示される。
+                  <img
+                    class="random-photo mt-5 aspect-video w-full rounded-xl object-cover lg:mt-1 lg:aspect-auto lg:h-full lg:w-80 lg:shrink-0"
+                    data-candidates={JSON.stringify(phase3Sources)}
+                    src={phase3Sources[0].src}
+                    srcset={phase3Sources[0].srcset}
+                    sizes="(min-width: 1024px) 320px, 100vw"
+                    alt=""
+                    loading="lazy"
+                  />
                 ) : (
                   <Image
-                    src={phaseImages[i][0]}
+                    src={singleImages[i]!}
                     alt=""
                     widths={[400, 800]}
                     sizes="(min-width: 1024px) 320px, 100vw"
@@ -132,3 +140,23 @@ const phaseLinks: { href: string; label: string }[][] = [
     </ol>
   </div>
 </section>
+
+<script>
+  // 第3期の写真候補から読み込みのたびにランダムで1枚選ぶ（スライドはしない、一度きり）。
+  document.querySelectorAll<HTMLImageElement>('.random-photo').forEach((img) => {
+    try {
+      const candidates = JSON.parse(img.dataset.candidates || '[]') as {
+        src: string;
+        srcset: string;
+      }[];
+      if (candidates.length > 0) {
+        const pick = candidates[Math.floor(Math.random() * candidates.length)];
+        img.src = pick.src;
+        img.srcset = pick.srcset;
+      }
+    } catch {
+      // 失敗しても、焼き込み済みの1枚目がそのまま表示され続ける
+    }
+    delete img.dataset.candidates;
+  });
+</script>
