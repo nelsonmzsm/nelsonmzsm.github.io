@@ -46,15 +46,18 @@ const heroSources = await Promise.all(
 
 <!--
   雑誌の扉ページ風ヒーロー：
-  写真を画面いっぱいに大きく敷き、紙色のグラデーションを重ねて「やわらかさ」を保つ。
-  背景写真は複数候補からランダム表示（候補は src/assets/hero-1〜6.jpg）。
+  スマホ／PCで写真の見せ方を変える。
+  ・スマホ：写真とコピーが重ならないよう、上下に分けて両方ちゃんと見せる（カード無し・素の背景）
+  ・PC（sm以上）：写真を画面いっぱいに背景として敷き、コピーは白いカードに乗せて読みやすさを確保
+  背景写真は複数候補からランダム表示（候補は src/assets/hero-1〜7.jpg）。
 -->
 <section class="relative overflow-hidden">
-  <div aria-hidden="true" class="absolute inset-0 overflow-hidden">
-    <!-- 背景写真：じわーっとズーム（kenburns）＋スクロールに遅れてついてくるパララックス。
-         上下対称に-40ずつ延ばすことで、写真の中央がヒーローの中央に来る
+  <!-- 写真：スマホは通常フローの横長ブロック、PCはセクション全体を覆う背景 -->
+  <div aria-hidden="true" class="relative w-full overflow-hidden sm:absolute sm:inset-0">
+    <!-- 背景写真：じわーっとズーム（kenburns）。PCのみスクロールに遅れてついてくるパララックスも付く。
+         PCでは上下対称に-40ずつ延ばすことで、写真の中央がヒーローの中央に来る
          （上だけ延ばすと写真の上部が見切れる）。延長ぶんはパララックス移動時の見切れ防止も兼ねる -->
-    <div class="hero-parallax absolute inset-x-0 -top-40 -bottom-40 will-change-transform">
+    <div class="hero-parallax relative sm:absolute sm:inset-x-0 sm:-top-40 sm:-bottom-40 sm:will-change-transform">
       <img
         id="hero-bg-img"
         data-candidates={JSON.stringify(heroSources)}
@@ -63,24 +66,22 @@ const heroSources = await Promise.all(
         sizes="100vw"
         style={`object-position: ${heroSources[0].position}`}
         alt=""
-        class="kenburns h-full w-full object-cover"
+        class="kenburns aspect-[4/3] w-full object-cover sm:aspect-auto sm:h-full"
         loading="eager"
         fetchpriority="high"
       />
     </div>
-    <!-- 左（テキスト側）は紙色を濃く、右へいくほど写真が見える。下端はページ背景へ溶ける。
-         文字がどんな写真の上でも読めるよう、テキスト側の不透明度は高めに保つ -->
-    <div
-      class="absolute inset-0 bg-gradient-to-b from-paper via-paper/90 to-paper sm:bg-gradient-to-r sm:from-paper sm:via-paper/92 sm:to-paper/45"
-    >
-    </div>
-    <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-paper to-transparent"></div>
+    <!-- 写真はPCでもほぼそのまま見せる。文字の読みやすさはすりガラス風パネル（下部）で確保するので、
+         ここでは下端をページ背景へなじませるフェードだけ残す -->
+    <div class="hidden sm:block sm:absolute sm:inset-x-0 sm:bottom-0 sm:h-24 sm:bg-gradient-to-t sm:from-paper sm:to-transparent"></div>
   </div>
 
   <!-- 余白はほどほどに：文字サイズ「大」(145%)でもファーストビューにCTAボタンが収まる範囲で、ゆとりを持たせる -->
-  <!-- 上（ファーストビュー内）はゆったり、下（近況との間）は締める -->
-  <div class="relative mx-auto max-w-6xl px-4 pt-16 pb-10 sm:px-6 sm:pt-20 sm:pb-12 lg:pt-24 lg:pb-14">
-    <div class="max-w-3xl">
+  <!-- スマホは写真の下に続く通常セクションなので上の余白は控えめ、PCは写真に重ねるのでゆったり -->
+  <div class="relative mx-auto max-w-6xl px-4 pt-6 pb-10 sm:px-6 sm:pt-20 sm:pb-12 lg:pt-24 lg:pb-14">
+    <!-- PCだけ、すりガラス風の半透明パネルに乗せる。硬い白ボックスではなく、
+         写真がうっすら透けつつ文字はくっきり読める「なじむ」見え方にする -->
+    <div class="max-w-3xl sm:rounded-2xl sm:bg-paper/70 sm:p-6 sm:backdrop-blur-md lg:p-8">
       <!-- whitespace-nowrap＋下のフィットスクリプトで、<br>区切りの2行から増えないようにする -->
       <h1
         id="hero-title"
@@ -158,11 +159,18 @@ const heroSources = await Promise.all(
     });
   }
 
-  // パララックス：スクロール量の2割ほど背景写真が遅れて追いかけてくる（奥行き感）
+  // パララックス：スクロール量の2割ほど背景写真が遅れて追いかけてくる（奥行き感）。
+  // スマホは写真が通常フローの一部（背景ではない）なので、PC幅のときだけ動かす。
   const bg = document.querySelector<HTMLElement>('.hero-parallax');
+  const isDesktop = window.matchMedia('(min-width: 640px)');
   if (bg) {
     let ticking = false;
     const update = () => {
+      if (!isDesktop.matches) {
+        bg.style.transform = '';
+        ticking = false;
+        return;
+      }
       const y = window.scrollY;
       if (y < window.innerHeight * 1.5) {
         bg.style.transform = `translateY(${y * 0.22}px)`;

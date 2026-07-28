@@ -67,7 +67,7 @@ export const ja: Dict = {
         era: '第2期',
         years: '2011〜2019（27〜35歳）',
         title: 'ベトナム／ブロガー・ライター・編集者',
-        body: 'ベトナム旅行中、現地に住む日本人からスカウトされ、転職と同時に移住。聞いていた新規事業が始まらないので、4ヶ月で退職して再び無職に。「おもしろいことは自分でやるしかない」と一念発起して、現地情報ブログ「べとまる」を立ち上げる。ベトナムと日本の“あいだ”を企画と発信でつなぐ。ドリアンの皮を装備して<a href="https://vietmaru.com/2015/06/durian-man/" target="_blank" rel="noopener" class="text-akatsuchi underline underline-offset-4">街を練り歩いた記事</a>がバズるほか、ブログ・記事関連の<a href="https://dailyportalz.jp/b/rookie2014/result.htm" target="_blank" rel="noopener" class="text-akatsuchi underline underline-offset-4">賞</a>を3度獲得、ライターに。その後、編集長として世界各地のライター30人超とともに情報サイトの創刊に携わり、編集経験を培う。',
+        body: 'ベトナム旅行中、現地に住む日本人から誘われ、転職と同時に移住。期待と現実にギャップを感じて、4ヶ月で退職して再び無職に。「おもしろいことは自分でやるしかない」と痛感し、現地情報ブログ「べとまる」を立ち上げる。ベトナムと日本の“あいだ”を企画と発信でつなぐ。ドリアンの皮を装備して<a href="https://vietmaru.com/2015/06/durian-man/" target="_blank" rel="noopener" class="text-akatsuchi underline underline-offset-4">街を練り歩いた記事</a>がバズるほか、記事の<a href="https://dailyportalz.jp/b/rookie2014/result.htm" target="_blank" rel="noopener" class="text-akatsuchi underline underline-offset-4">賞</a>を3度獲得、ライターに。その後、編集長として世界各地のライター30人超と情報サイトの創刊に携わり、編集経験を培う。',
       },
       {
         era: '第3期',

@@ -5,7 +5,6 @@ period: 2026〜現在
 summary: 誰でも自分の人生を年表形式でまとめられるウェブアプリ。
 thumbnail:
   - ./images/jibun-nenpyo-1.jpg
-draft: true
 order: 2
 ---
 
