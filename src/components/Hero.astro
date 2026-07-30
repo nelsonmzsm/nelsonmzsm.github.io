@@ -1,13 +1,7 @@
 ---
-import { getImage } from 'astro:assets';
+import { Image } from 'astro:assets';
 import { getDict, localePath, type Locale } from '../i18n';
-import hero1 from '../assets/hero-1.jpg';
-import hero2 from '../assets/hero-2.jpg';
-import hero3 from '../assets/hero-3.jpg';
-import hero4 from '../assets/hero-4.jpg';
-import hero5 from '../assets/hero-5.jpg';
-import hero6 from '../assets/hero-6.jpg';
-import hero7 from '../assets/hero-7.jpg';
+import heroBg from '../assets/hero-bg.jpg';
 
 interface Props {
   locale: Locale;
@@ -16,81 +10,58 @@ interface Props {
 const { locale } = Astro.props;
 const dict = getDict(locale);
 const prefix = localePath(locale);
-
-// 背景写真は読み込みのたびにランダムで1枚選ぶ（クライアントJSで切り替え）。
-// 候補の追加・差し替えは src/assets/hero-1〜6.jpg。
-// position: object-cover時にどこを基準に切り抜くか（人物が中央から外れている写真向け）
-const heroCandidates = [
-  { src: hero1 },
-  { src: hero2 },
-  { src: hero3 },
-  { src: hero4, position: 'left 15%' }, // 本人の頭が見切れないよう、上寄りだが少し余裕を持たせる
-  { src: hero5 },
-  { src: hero6 },
-  { src: hero7 },
-];
-const heroSources = await Promise.all(
-  heroCandidates.map(async ({ src, position }) => {
-    const [w960, w1920] = await Promise.all([
-      getImage({ src, width: 960, format: 'webp' }),
-      getImage({ src, width: 1920, format: 'webp' }),
-    ]);
-    return {
-      src: w1920.src,
-      srcset: `${w960.src} 960w, ${w1920.src} 1920w`,
-      position: position ?? 'center',
-    };
-  })
-);
 ---
 
 <!--
   雑誌の扉ページ風ヒーロー：
-  スマホ／PCとも、写真は加工なしでそのまま見せる（カード・すりガラスパネルは使わない）。
-  文字は写真に直接重ね、白文字＋ドロップシャドウで、どんな写真の上でも読めるようにする。
-  ・スマホ：写真とコピーが重ならないよう、上下に分けて両方ちゃんと見せる（写真側は白文字不要）
-  ・PC（sm以上）：写真を画面いっぱいに背景として敷き、コピーを白文字＋影で直接重ねる
-  背景写真は複数候補からランダム表示（候補は src/assets/hero-1〜7.jpg）。
+  写真1枚をセクション全体の背景として敷き、写真全体に均一な暗いオーバーレイをかける。
+  さらに文字が乗る左側だけ暗さを一段追加し（右へフェードアウト）、
+  写真の明るい部分と文字が重なってもコントラストが落ちないようにする。
+  文字（白＋強めのtext-shadow）は常にオーバーレイの上に乗るので、
+  「文字と写真の境界がはっきりしている」状態を保てる（スマホ／PC共通の構成）。
+  写真の差し替えは src/assets/hero-bg.jpg。
 -->
 <section class="relative overflow-hidden">
-  <!-- 写真：スマホは通常フローの横長ブロック、PCはセクション全体を覆う背景 -->
-  <div aria-hidden="true" class="relative w-full overflow-hidden sm:absolute sm:inset-0">
-    <!-- 背景写真：じわーっとズーム（kenburns）。PCのみスクロールに遅れてついてくるパララックスも付く。
-         PCでは上下対称に-40ずつ延ばすことで、写真の中央がヒーローの中央に来る
+  <div aria-hidden="true" class="absolute inset-0 overflow-hidden">
+    <!-- 背景写真：じわーっとズーム（kenburns）＋スクロールに遅れてついてくるパララックス。
+         上下対称に-40ずつ延ばすことで、写真の中央がヒーローの中央に来る
          （上だけ延ばすと写真の上部が見切れる）。延長ぶんはパララックス移動時の見切れ防止も兼ねる -->
-    <div class="hero-parallax relative sm:absolute sm:inset-x-0 sm:-top-40 sm:-bottom-40 sm:will-change-transform">
-      <img
-        id="hero-bg-img"
-        data-candidates={JSON.stringify(heroSources)}
-        src={heroSources[0].src}
-        srcset={heroSources[0].srcset}
-        sizes="100vw"
-        style={`object-position: ${heroSources[0].position}`}
+    <div class="hero-parallax absolute inset-x-0 -top-40 -bottom-40 will-change-transform">
+      <Image
+        src={heroBg}
         alt=""
-        class="kenburns aspect-[4/3] w-full object-cover sm:aspect-auto sm:h-full"
+        widths={[640, 960, 1920]}
+        sizes="100vw"
+        class="kenburns h-full w-full object-cover"
         loading="eager"
         fetchpriority="high"
       />
     </div>
-    <!-- PCは写真を画面いっぱいに見せるが、下端だけページ背景へなじませるフェードを残す -->
-    <div class="hidden sm:block sm:absolute sm:inset-x-0 sm:bottom-0 sm:h-24 sm:bg-gradient-to-t sm:from-paper sm:to-transparent"></div>
+    <!-- 写真全体に均一な暗さを重ねる（グラデーションではなく一律）。
+         これにより文字はどこに置いても同じコントラストで読める -->
+    <div class="absolute inset-0 bg-ink/72"></div>
+    <!-- 文字が乗る左側（テキスト列の幅=max-w-3xl分）を、さらに一段暗く。
+         via位置をテキスト列の右端あたり(60%)まで保つことで、段落の右側や
+         折り返した2行目・3行目が写真の明るい部分と重なってもコントラストを保つ -->
+    <div class="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/55 via-60% to-transparent"></div>
+    <!-- 下端だけ、次のセクション（紙色の背景）へなじませる -->
+    <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-paper to-transparent"></div>
   </div>
 
-  <!-- 余白はほどほどに：文字サイズ「大」(145%)でもファーストビューにCTAボタンが収まる範囲で、ゆとりを持たせる -->
-  <!-- スマホは写真の下に続く通常セクションなので上の余白は控えめ、PCは写真に重ねるのでゆったり -->
-  <div class="relative mx-auto max-w-6xl px-4 pt-6 pb-10 sm:px-6 sm:pt-20 sm:pb-12 lg:pt-24 lg:pb-14">
-    <!-- PCは写真に文字を直接重ねるので白文字＋ドロップシャドウで読みやすさを確保。
-         スマホは写真と重ならない（下の通常フロー）ので、これまで通りの色のまま -->
+  <!-- 写真を主役として見せつつ、文字サイズ「大」でも収まる高さを確保する。
+       flexでの中央揃えはタイトルの幅測定（フィットスクリプト）を狂わせるため使わず、
+       上下の余白だけで縦位置を調整する（これまでも実績のある組み方） -->
+  <div class="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:py-32">
     <div class="max-w-3xl">
-      <!-- whitespace-nowrap＋下のフィットスクリプトで、<br>区切りの2行から増えないようにする -->
+      <!-- 幅が足りない画面では自然に2行へ折り返す（JSでの強制1行化はやめ、CSSの折り返しに任せる） -->
       <h1
         id="hero-title"
-        class="fade-in font-serif text-3xl leading-normal font-semibold whitespace-nowrap text-umi-deep sm:text-4xl sm:leading-normal sm:text-paper sm:[text-shadow:0_2px_16px_rgba(0,0,0,0.55),0_1px_4px_rgba(0,0,0,0.5)] lg:text-5xl lg:leading-normal"
+        class="fade-in font-serif text-3xl leading-normal font-semibold text-paper [text-shadow:0_1px_3px_rgba(0,0,0,0.8),0_4px_16px_rgba(0,0,0,0.5)] sm:text-4xl sm:leading-normal sm:whitespace-nowrap lg:text-5xl lg:leading-normal"
         set:html={dict.hero.titleHtml}
       />
       <p
         id="hero-lead"
-        class="fade-in mt-6 text-[0.9375rem] leading-relaxed text-ink sm:text-base sm:text-paper sm:[text-shadow:0_1px_10px_rgba(0,0,0,0.6),0_1px_3px_rgba(0,0,0,0.55)]"
+        class="fade-in mt-6 text-[0.9375rem] leading-relaxed text-paper [text-shadow:0_1px_2px_rgba(0,0,0,0.75),0_3px_12px_rgba(0,0,0,0.45)] sm:text-base"
         style="transition-delay: 120ms"
         set:html={dict.hero.lead}
       />
@@ -98,7 +69,7 @@ const heroSources = await Promise.all(
       <div class="fade-in mt-8" style="transition-delay: 240ms">
         <a
           href={`${prefix}#about`}
-          class="hover-lift inline-block rounded-full bg-umi px-7 py-3 text-sm text-paper shadow-sm hover:bg-umi-deep hover:shadow-md sm:bg-paper sm:text-umi-deep sm:shadow-md sm:hover:bg-white"
+          class="hover-lift inline-block rounded-full bg-paper px-7 py-3 text-sm text-umi-deep shadow-sm hover:bg-white hover:shadow-md"
         >
           {dict.hero.cta} ↓
         </a>
@@ -108,31 +79,6 @@ const heroSources = await Promise.all(
 </section>
 
 <script>
-  // 背景写真をランダムに1枚選んで差し込む（読み込みのたびに変わる）。
-  // 初期HTMLには1枚目の写真を仮のsrcとして焼き込んであるので、
-  // このスクリプトが万一失敗・後回しにされても背景が消えることはない。
-  // ※他の処理より先に実行し、後続の処理でエラーが起きても影響を受けないようにする。
-  try {
-    const heroImg = document.getElementById('hero-bg-img') as HTMLImageElement | null;
-    if (heroImg) {
-      const candidates = JSON.parse(heroImg.dataset.candidates || '[]') as {
-        src: string;
-        srcset: string;
-        position: string;
-      }[];
-      if (candidates.length > 0) {
-        const pick = candidates[Math.floor(Math.random() * candidates.length)];
-        heroImg.src = pick.src;
-        heroImg.srcset = pick.srcset;
-        heroImg.sizes = '100vw';
-        heroImg.style.objectPosition = pick.position;
-      }
-      delete heroImg.dataset.candidates;
-    }
-  } catch {
-    // 失敗しても、焼き込み済みの1枚目の写真がそのまま表示され続ける
-  }
-
   // 見出しのフィット：コピーが<br>区切りの行数（2行）から増えないよう、
   // はみ出す場合だけ文字サイズを1pxずつ縮める。
   // 画面幅・文字サイズ設定（あボタン）・言語の全組み合わせで「ちょうど2行」を保証する。
@@ -160,18 +106,11 @@ const heroSources = await Promise.all(
     });
   }
 
-  // パララックス：スクロール量の2割ほど背景写真が遅れて追いかけてくる（奥行き感）。
-  // スマホは写真が通常フローの一部（背景ではない）なので、PC幅のときだけ動かす。
+  // パララックス：スクロール量の2割ほど背景写真が遅れて追いかけてくる（奥行き感）
   const bg = document.querySelector<HTMLElement>('.hero-parallax');
-  const isDesktop = window.matchMedia('(min-width: 640px)');
   if (bg) {
     let ticking = false;
     const update = () => {
-      if (!isDesktop.matches) {
-        bg.style.transform = '';
-        ticking = false;
-        return;
-      }
       const y = window.scrollY;
       if (y < window.innerHeight * 1.5) {
         bg.style.transform = `translateY(${y * 0.22}px)`;
