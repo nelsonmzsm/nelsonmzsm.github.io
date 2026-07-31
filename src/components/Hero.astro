@@ -37,13 +37,11 @@ const prefix = localePath(locale);
         fetchpriority="high"
       />
     </div>
-    <!-- 写真全体に均一な暗さを重ねる（グラデーションではなく一律）。
-         これにより文字はどこに置いても同じコントラストで読める -->
-    <div class="absolute inset-0 bg-ink/72"></div>
-    <!-- 文字が乗る左側（テキスト列の幅=max-w-3xl分）を、さらに一段暗く。
-         via位置をテキスト列の右端あたり(60%)まで保つことで、段落の右側や
-         折り返した2行目・3行目が写真の明るい部分と重なってもコントラストを保つ -->
-    <div class="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/55 via-60% to-transparent"></div>
+    <!-- 写真全体を暗くするのはやめ、写真本来の明るさ・色味を右側は活かす。
+         暗さはテキスト列（max-w-3xl）の幅にだけ集中させ、右へ向けてフェザーで抜く
+         （参考：人物写真の左側だけにテキスト用の暗いパネルを敷き、右は写真そのままという構図） -->
+    <div class="absolute inset-0 bg-ink/12"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-ink/88 via-ink/80 via-45% to-transparent to-75%"></div>
     <!-- 下端だけ、次のセクション（紙色の背景）へなじませる -->
     <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-paper to-transparent"></div>
   </div>
