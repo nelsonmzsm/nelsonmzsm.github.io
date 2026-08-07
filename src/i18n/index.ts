@@ -83,7 +83,8 @@ export interface Dict {
     /** カード群の下に置く結びのひとこと（任意） */
     note?: string;
     /** quals: そのカードに対応する資格・経歴（任意） */
-    items: { title: string; quals?: string; examples: string[] }[];
+    /** price: 過去実績ベースの目安価格（任意。未設定のカードには表示しない） */
+    items: { title: string; quals?: string; examples: string[]; price?: string }[];
   };
   about: {
     heading: string;

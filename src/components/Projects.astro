@@ -11,6 +11,7 @@ interface Props {
 
 const { locale } = Astro.props;
 const dict = getDict(locale);
+const jaLike = locale === 'ja' || locale === 'easy';
 
 // 本番ビルドでは draft: true の取り組みを除外する（開発中はプレビューできる）
 const allProjects = await getCollection('projects', ({ data }) =>
@@ -35,6 +36,22 @@ const byCategory = CATEGORIES.map((category) => ({
     {
       dict.projects.jaOnlyNote && (
         <p class="fade-in mt-3 text-sm text-ink-soft">※ {dict.projects.jaOnlyNote}</p>
+      )
+    }
+    {
+      jaLike && (
+        <p class="fade-in mt-3 text-sm text-ink-soft">
+          活動の参考資料は
+          <a
+            href="https://drive.google.com/drive/folders/1WfeLscSkKfOUjk970Rrep3S8VpktoW02"
+            target="_blank"
+            rel="noopener"
+            class="text-akatsuchi underline underline-offset-4"
+          >
+            こちら
+          </a>
+          （Google Drive）
+        </p>
       )
     }
 
