@@ -59,7 +59,7 @@ const prefix = localePath(locale);
       />
       <p
         id="hero-lead"
-        class="fade-in mt-6 text-[0.9375rem] leading-relaxed text-paper [text-shadow:0_1px_2px_rgba(0,0,0,0.75),0_3px_12px_rgba(0,0,0,0.45)] sm:text-base"
+        class="fade-in mt-6 text-[0.9375rem] leading-loose text-paper [text-shadow:0_1px_2px_rgba(0,0,0,0.75),0_3px_12px_rgba(0,0,0,0.45)] sm:text-base sm:leading-relaxed"
         style="transition-delay: 120ms"
         set:html={dict.hero.lead}
       />
@@ -85,10 +85,17 @@ const prefix = localePath(locale);
     const fit = () => {
       // inline-block（均等割り付け）でも動くよう、親要素の幅を上限にする
       const limit = () => title.parentElement?.clientWidth ?? title.clientWidth;
+      // モバイルは自然折り返し（nowrapなし）のため、幅は常にコンテナ内に収まってしまい
+      // scrollWidthでは「3行目にあふれた」ことを検知できない。行の高さで行数を判定する
+      const maxHeight = () => parseFloat(getComputedStyle(title).lineHeight) * 2;
       title.style.fontSize = '';
       let fs = parseFloat(getComputedStyle(title).fontSize);
       let guard = 60;
-      while (title.scrollWidth > limit() + 1 && fs > 16 && guard-- > 0) {
+      while (
+        (title.scrollWidth > limit() + 1 || title.scrollHeight > maxHeight() + 1) &&
+        fs > 16 &&
+        guard-- > 0
+      ) {
         fs -= 1;
         title.style.fontSize = `${fs}px`;
       }
