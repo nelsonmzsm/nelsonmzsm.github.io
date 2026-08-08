@@ -115,7 +115,7 @@ export interface Dict {
   contact: {
     heading: string;
     lead: string;
-    /** 「お仕事のご依頼を受け付けています」の安心感を出す一文 */
+    /** 「お仕事のご相談を受け付けています」の安心感を出す一文 */
     workNote: string;
     topics: string[];
     form: {
