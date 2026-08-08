@@ -71,6 +71,8 @@ export interface Dict {
     titleHtml: string;
     lead: string;
     cta: string;
+    /** プロフィール写真のalt文（任意。未設定時はコンポーネント側で既定値を使う） */
+    photoAlt?: string;
     /** プロフィール下に並べる、人生とゆかりの深い言葉（資格・肩書き・ルーツ） */
     tags: string[];
   };
