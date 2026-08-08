@@ -113,6 +113,23 @@ const jsonLd = {
     <!-- Cloudflare Web Analytics：デプロイ後にトークンを設定して有効化する
     <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "YOUR_TOKEN"}'></script>
     -->
+
+    <!-- Google Analytics 4：ローカル開発時のアクセスを計測に含めないよう本番ビルドのみ読み込む -->
+    {
+      import.meta.env.PROD && (
+        <>
+          <script async src="https://www.googletagmanager.com/gtag/js?id=G-PLVFRB5JWH" />
+          <script define:vars={{ gaId: 'G-PLVFRB5JWH' }}>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+              dataLayer.push(arguments);
+            }
+            gtag('js', new Date());
+            gtag('config', gaId);
+          </script>
+        </>
+      )
+    }
   </head>
   <body>
     <Header locale={locale} />
