@@ -142,6 +142,43 @@ a[target='_blank']::after {
   );
 }
 
+/* ヒーローは写真に白文字を直接重ねるため（スマホ・PC共通）、マーカーも淡い色のままだと
+   白文字が読めなくなる。ここだけ濃い色（--color-kin）に切り替えて、文字は白のまま保つ
+   （黒文字に変えると却って読みにくいとのフィードバックがあったため。他の.marker利用箇所には影響しない） */
+#hero-title.marker,
+#hero-title .marker {
+  background-image: linear-gradient(
+    transparent 62%,
+    var(--color-kin) 62%,
+    var(--color-kin) 94%,
+    transparent 94%
+  );
+}
+#hero-lead .marker-umi {
+  background-image: linear-gradient(
+    transparent 62%,
+    var(--color-umi-deep) 62%,
+    var(--color-umi-deep) 94%,
+    transparent 94%
+  );
+}
+#hero-lead .marker-akatsuchi {
+  background-image: linear-gradient(
+    transparent 62%,
+    var(--color-akatsuchi) 62%,
+    var(--color-akatsuchi) 94%,
+    transparent 94%
+  );
+}
+#hero-lead .marker-gajumaru {
+  background-image: linear-gradient(
+    transparent 62%,
+    var(--color-gajumaru) 62%,
+    var(--color-gajumaru) 94%,
+    transparent 94%
+  );
+}
+
 /* Contactの話題チップを吹き出し風に */
 .speech-chip {
   position: relative;

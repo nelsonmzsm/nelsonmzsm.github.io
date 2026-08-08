@@ -25,7 +25,6 @@ export const ja: Dict = {
       '<span class="marker">“あいだ”で、<br class="sm:hidden" />つくって、つなぐ。</span>',
     lead: 'ネルソン水嶋です。作ってきたものは、記事、冊子、アプリ…差し詰め、「デジタル百姓」といったところですが、目的は、いつも、<strong>“あいだ”でつくってつなぐこと</strong>。<span class="mt-3 block"><span class="marker-umi">ベトナムでは日本とのあいだを</span>、<span class="marker-akatsuchi">沖永良部島では外国人と日本人とのあいだを</span>、<span class="marker-gajumaru">そしていまは、東京で、出身者と島ルーツのあいだを</span>、つないできました。</span>',
     cta: 'ネルソンのことを知る',
-    photoAlt: 'ネルソン水嶋の写真',
     tags: ['社会教育士', '多文化共生マネージャー', 'Google AI Professional 認定', '元システムエンジニア', 'ライター・編集者', '沖永良部島ルーツ', 'ドリアンマン'],
   },
   news: {

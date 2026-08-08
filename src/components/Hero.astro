@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import { getDict, localePath, type Locale } from '../i18n';
-import heroPhoto from '../assets/hero-photo.png';
+import heroBg from '../assets/hero-bg.jpg';
 
 interface Props {
   locale: Locale;
@@ -10,92 +10,71 @@ interface Props {
 const { locale } = Astro.props;
 const dict = getDict(locale);
 const prefix = localePath(locale);
-const photoAlt = dict.hero.photoAlt ?? 'ネルソン水嶋';
 ---
 
 <!--
-  白背景＋本人写真のヒーロー。写真は頭から腰あたりまでをobject-cover+object-topで
-  切り出して使う（元画像は膝下まで写っているが、脚は見せない）。
-  PC：テキストを左、写真を右に大きく配置。
-  スマホ：写真をテキストの背景として上部に大きく敷き、四辺を楕円マスクで
-          紙色にフェザーしてなじませる。文字の後ろが濃い部分（服など）に
-          かかっても読めるよう、上から紙色のグラデーションを薄く重ねる。
-  写真の差し替えは src/assets/hero-photo.png。
+  雑誌の扉ページ風ヒーロー：
+  写真1枚をセクション全体の背景として敷き、写真全体に均一な暗いオーバーレイをかける。
+  さらに文字が乗る左側だけ暗さを一段追加し（右へフェードアウト）、
+  写真の明るい部分と文字が重なってもコントラストが落ちないようにする。
+  文字（白＋強めのtext-shadow）は常にオーバーレイの上に乗るので、
+  「文字と写真の境界がはっきりしている」状態を保てる（スマホ／PC共通の構成）。
+  写真の差し替えは src/assets/hero-bg.jpg。
 -->
-<section class="relative isolate overflow-hidden bg-paper">
-  <!-- モバイル用：テキストの背景として敷く写真（sm以上では非表示） -->
-  <div
-    class="hero-photo-fade absolute inset-x-0 top-0 -z-10 h-[26rem] w-full sm:hidden"
-    aria-hidden="true"
-  >
-    <Image
-      src={heroPhoto}
-      alt=""
-      widths={[480, 640, 768]}
-      sizes="100vw"
-      class="h-full w-full object-cover object-top"
-      loading="eager"
-      fetchpriority="high"
-    />
-    <!-- 見出し～本文が乗る範囲（上から約65%）はしっかり紙色で保護し、
-         濃紺のシャツと重なって読めなくなるのを防ぐ。残りの下側だけ写真を素で見せる -->
-    <div
-      class="absolute inset-0 bg-gradient-to-b from-paper/95 from-0% via-paper/92 via-65% to-transparent to-100%"
-    >
+<section class="relative overflow-hidden">
+  <div aria-hidden="true" class="absolute inset-0 overflow-hidden">
+    <!-- 背景写真：じわーっとズーム（kenburns）＋スクロールに遅れてついてくるパララックス。
+         上下対称に-40ずつ延ばすことで、写真の中央がヒーローの中央に来る
+         （上だけ延ばすと写真の上部が見切れる）。延長ぶんはパララックス移動時の見切れ防止も兼ねる -->
+    <div class="hero-parallax absolute inset-x-0 -top-40 -bottom-40 will-change-transform">
+      <Image
+        src={heroBg}
+        alt=""
+        widths={[640, 960, 1920]}
+        sizes="100vw"
+        class="kenburns h-full w-full object-cover"
+        loading="eager"
+        fetchpriority="high"
+      />
     </div>
+    <!-- 写真全体を暗くするのはやめ、写真本来の明るさ・色味を右側は活かす。
+         暗さはテキスト列（max-w-3xl）の幅にだけ集中させ、右へ向けてフェザーで抜く
+         （参考：人物写真の左側だけにテキスト用の暗いパネルを敷き、右は写真そのままという構図） -->
+    <div class="absolute inset-0 bg-ink/12"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-ink/88 via-ink/80 via-45% to-transparent to-75%"></div>
+    <!-- 下端だけ、次のセクション（紙色の背景）へなじませる -->
+    <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-paper to-transparent"></div>
   </div>
 
-  <div class="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:py-24">
-    <div
-      class="flex flex-col items-center gap-8 sm:flex-row sm:items-center sm:justify-between sm:gap-10"
-    >
-      <div class="max-w-xl sm:order-1">
-        <!-- 幅が足りない画面では自然に2行へ折り返す（JSは2行を超えたときだけ縮小） -->
-        <h1
-          id="hero-title"
-          class="fade-in font-serif text-3xl leading-normal font-semibold text-ink sm:text-4xl sm:leading-normal sm:whitespace-nowrap lg:text-5xl lg:leading-normal"
-          set:html={dict.hero.titleHtml}
-        />
-        <p
-          id="hero-lead"
-          class="fade-in mt-6 text-[0.9375rem] leading-loose text-ink-soft sm:text-base sm:leading-relaxed"
-          style="transition-delay: 120ms"
-          set:html={dict.hero.lead}
-        />
-        <!-- 資格・肩書きはヒーローには置かず、「できること」の各カード（quals）に移した -->
-        <div class="fade-in mt-8" style="transition-delay: 240ms">
-          <a
-            href={`${prefix}#about`}
-            class="hover-lift inline-block rounded-full bg-akatsuchi px-7 py-3 text-sm text-paper shadow-sm hover:bg-umi-deep hover:shadow-md"
-          >
-            {dict.hero.cta} ↓
-          </a>
-        </div>
-      </div>
-
-      <!-- PC用：右側に大きく、頭から腰あたりまでのクロップ（sm未満では非表示） -->
-      <div class="hidden shrink-0 sm:order-2 sm:block sm:w-72 md:w-96 lg:w-[28rem]">
-        <Image
-          src={heroPhoto}
-          alt={photoAlt}
-          widths={[480, 640, 896]}
-          sizes="(min-width: 1024px) 28rem, (min-width: 640px) 24rem, 0px"
-          class="aspect-[4/5] w-full rounded-2xl object-cover object-top"
-          loading="eager"
-          fetchpriority="high"
-        />
+  <!-- 写真を主役として見せつつ、文字サイズ「大」でも収まる高さを確保する。
+       flexでの中央揃えはタイトルの幅測定（フィットスクリプト）を狂わせるため使わず、
+       上下の余白だけで縦位置を調整する（これまでも実績のある組み方） -->
+  <div class="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:py-32">
+    <div class="max-w-3xl">
+      <!-- 幅が足りない画面では自然に2行へ折り返す（JSでの強制1行化はやめ、CSSの折り返しに任せる） -->
+      <h1
+        id="hero-title"
+        class="fade-in font-serif text-3xl leading-normal font-semibold text-paper [text-shadow:0_1px_3px_rgba(0,0,0,0.8),0_4px_16px_rgba(0,0,0,0.5)] sm:text-4xl sm:leading-normal sm:whitespace-nowrap lg:text-5xl lg:leading-normal"
+        set:html={dict.hero.titleHtml}
+      />
+      <p
+        id="hero-lead"
+        class="fade-in mt-6 text-[0.9375rem] leading-loose text-paper [text-shadow:0_1px_2px_rgba(0,0,0,0.75),0_3px_12px_rgba(0,0,0,0.45)] sm:text-base sm:leading-relaxed"
+        style="transition-delay: 120ms"
+        set:html={dict.hero.lead}
+      />
+      <!-- 資格・肩書きはヒーローには置かず、「できること」の各カード（quals）に移した -->
+      <div class="fade-in mt-8" style="transition-delay: 240ms">
+        <a
+          href={`${prefix}#about`}
+          class="hover-lift inline-block rounded-full bg-paper px-7 py-3 text-sm text-umi-deep shadow-sm hover:bg-white hover:shadow-md"
+        >
+          {dict.hero.cta} ↓
+        </a>
       </div>
     </div>
   </div>
 </section>
-
-<style>
-  /* スマホのみ：写真の四辺を紙色へ楕円形にフェザーし、四角い切り抜き感をなくす */
-  .hero-photo-fade {
-    -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 30%, black 50%, transparent 95%);
-    mask-image: radial-gradient(ellipse 75% 70% at 50% 30%, black 50%, transparent 95%);
-  }
-</style>
 
 <script>
   // 見出しのフィット：コピーが<br>区切りの行数（2行）から増えないよう、
@@ -130,5 +109,28 @@ const photoAlt = dict.hero.photoAlt ?? 'ネルソン水嶋';
       attributes: true,
       attributeFilter: ['data-fontsize'],
     });
+  }
+
+  // パララックス：スクロール量の2割ほど背景写真が遅れて追いかけてくる（奥行き感）
+  const bg = document.querySelector<HTMLElement>('.hero-parallax');
+  if (bg) {
+    let ticking = false;
+    const update = () => {
+      const y = window.scrollY;
+      if (y < window.innerHeight * 1.5) {
+        bg.style.transform = `translateY(${y * 0.22}px)`;
+      }
+      ticking = false;
+    };
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(update);
+        }
+      },
+      { passive: true }
+    );
   }
 </script>
