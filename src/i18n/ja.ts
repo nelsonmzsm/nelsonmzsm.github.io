@@ -11,7 +11,7 @@ export const ja: Dict = {
     projects: '制作実績',
     company: '会社概要',
     contact: 'ご相談',
-    services: 'お仕事募集',
+    services: 'お仕事相談',
   },
   toolbar: {
     fontSize: '文字の大きさ',
