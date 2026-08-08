@@ -1,0 +1,28 @@
+---
+import WaveDivider from './WaveDivider.astro';
+
+// 「できること」セクションを廃止し、代わりに置いたシンプルな依頼導線。
+// リンク先の記事（お仕事メニュー・料金の目安）が日本語固定のため、この帯も日本語固定にしている
+// （他の帯と違いi18n化していない。ロケールをまたいで表示されるのは意図した割り切り）
+---
+
+<section id="work" class="scroll-mt-24 bg-akatsuchi-mist">
+  <WaveDivider position="top" />
+  <div class="mx-auto max-w-6xl px-4 py-14 text-center sm:px-6 sm:py-20">
+    <h2 class="fade-in font-serif text-2xl font-semibold text-umi-deep sm:text-3xl">
+      お仕事のご依頼
+    </h2>
+    <p class="fade-in mt-4 text-[0.9375rem] leading-loose text-ink sm:text-base">
+      記事制作からアプリのプロトタイプ開発まで、いろいろ引き受けています。メニューと料金の目安はこちらから。
+    </p>
+    <div class="fade-in mt-8">
+      <a
+        href="/news/2026-08-work-request/"
+        class="hover-lift inline-block rounded-full bg-akatsuchi px-8 py-3 text-sm text-paper hover:bg-umi-deep hover:shadow-md"
+      >
+        仕事を依頼する →
+      </a>
+    </div>
+  </div>
+  <WaveDivider position="bottom" />
+</section>

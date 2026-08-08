@@ -40,13 +40,13 @@ const prefix = localePath(locale);
         loading="eager"
         fetchpriority="high"
       />
-      <!-- スマホ：縦長カット。人物が中央いっぱいに写っているのでそのまま中央基準でcover -->
+      <!-- スマホ：縦長カット。右上のスペースに顔が来るよう、右寄り・上寄りでcover -->
       <Image
         src={heroCoverSp}
         alt=""
         widths={[480, 768, 960]}
         sizes="100vw"
-        class="kenburns h-full w-full object-cover sm:hidden"
+        class="kenburns h-full w-full object-cover object-[78%_18%] sm:hidden"
         loading="eager"
         fetchpriority="high"
       />

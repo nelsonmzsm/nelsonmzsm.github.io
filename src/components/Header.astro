@@ -15,10 +15,11 @@ const brandCatch = jaLike ? '“あいだ”の編集者こと' : 'Editor of the
 const brandName = jaLike ? 'ネルソン水嶋' : 'Nelson Mizushima';
 
 // ご相談はナビではなく常時表示のCTAボタンにする（下のマークアップ参照）
+// 「お仕事募集」は記事（日本語固定）のため、locale prefixを付けず固定パスにする
 const nav = [
   { href: `${prefix}#about`, label: dict.nav.about },
   { href: `${prefix}#projects`, label: dict.nav.projects },
-  { href: `${prefix}#services`, label: dict.nav.services },
+  { href: '/news/2026-08-work-request/', label: dict.nav.services },
   { href: `${prefix}#company`, label: dict.nav.company },
 ];
 

@@ -8,10 +8,10 @@ export const ja: Dict = {
   },
   nav: {
     about: 'ネルソンのこと',
-    projects: 'やってきたこと',
+    projects: '制作実績',
     company: '会社概要',
     contact: 'ご相談',
-    services: 'できること',
+    services: 'お仕事募集',
   },
   toolbar: {
     fontSize: '文字の大きさ',
@@ -23,7 +23,7 @@ export const ja: Dict = {
   hero: {
     titleHtml:
       '<span class="marker">“あいだ”で、<br class="sm:hidden" />つくって、つなぐ。</span>',
-    lead: 'ネルソン水嶋です。作ってきたものは、記事、冊子、アプリ…差し詰め、「デジタル百姓」といったところですが、目的は、いつも、<strong>“あいだ”でつくってつなぐこと</strong>。<span class="mt-3 block"><span class="marker-umi">ベトナムでは日本とのあいだを</span>、<span class="marker-akatsuchi">沖永良部島では外国人と日本人とのあいだを</span>、<span class="marker-gajumaru">そしていまは、東京で、出身者と島ルーツのあいだを</span>、つないできました。</span>',
+    lead: 'ネルソン水嶋です。作ってきたものは、記事、冊子、アプリ…と、いろいろありますが、目的は、いつも、<strong>“あいだ”でつくってつなぐこと</strong>。<span class="mt-3 block"><span class="marker-umi">ベトナムでは日本とのあいだを</span>、<span class="marker-akatsuchi">沖永良部島では外国人と日本人とのあいだを</span>、<span class="marker-gajumaru">そしていまは、東京で、出身者と島ルーツのあいだを</span>。</span>',
     cta: 'ネルソンのことを知る',
     tags: ['社会教育士', '多文化共生マネージャー', 'Google AI Professional 認定', '元システムエンジニア', 'ライター・編集者', '沖永良部島ルーツ', 'ドリアンマン'],
   },
@@ -86,7 +86,7 @@ export const ja: Dict = {
     ],
   },
   projects: {
-    heading: 'おもなプロジェクト',
+    heading: 'おもなプロジェクト（制作実績）',
     lead: '「事業内容」と言うと堅いので、これまで形にしてきたプロジェクトを並べます。それぞれ、読み物として書いています。',
     categories: {
       mediaOps: {
