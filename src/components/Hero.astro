@@ -10,20 +10,44 @@ interface Props {
 const { locale } = Astro.props;
 const dict = getDict(locale);
 const prefix = localePath(locale);
+const photoAlt = dict.hero.photoAlt ?? 'ネルソン水嶋';
 ---
 
 <!--
-  白背景＋本人写真のヒーロー。
-  PC：テキストを左、写真を右の余白に「収める」（object-contain）。
-       余った余白は塗り足さず、紙色の背景のまま白く抜ける。
-  スマホ：写真を上、テキストを下に積む。写真は上下端をフェザー（マスク）でぼかし、
-          背景の紙色に溶け込むようにして、四角い切り抜き感を出さない。
+  白背景＋本人写真のヒーロー。写真は頭から腰あたりまでをobject-cover+object-topで
+  切り出して使う（元画像は膝下まで写っているが、脚は見せない）。
+  PC：テキストを左、写真を右に大きく配置。
+  スマホ：写真をテキストの背景として上部に大きく敷き、四辺を楕円マスクで
+          紙色にフェザーしてなじませる。文字の後ろが濃い部分（服など）に
+          かかっても読めるよう、上から紙色のグラデーションを薄く重ねる。
   写真の差し替えは src/assets/hero-photo.png。
 -->
-<section class="relative overflow-hidden bg-paper">
-  <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:py-24">
+<section class="relative isolate overflow-hidden bg-paper">
+  <!-- モバイル用：テキストの背景として敷く写真（sm以上では非表示） -->
+  <div
+    class="hero-photo-fade absolute inset-x-0 top-0 -z-10 h-[26rem] w-full sm:hidden"
+    aria-hidden="true"
+  >
+    <Image
+      src={heroPhoto}
+      alt=""
+      widths={[480, 640, 768]}
+      sizes="100vw"
+      class="h-full w-full object-cover object-top"
+      loading="eager"
+      fetchpriority="high"
+    />
+    <!-- 見出し～本文が乗る範囲（上から約65%）はしっかり紙色で保護し、
+         濃紺のシャツと重なって読めなくなるのを防ぐ。残りの下側だけ写真を素で見せる -->
     <div
-      class="flex flex-col items-center gap-8 sm:flex-row sm:items-end sm:justify-between sm:gap-10"
+      class="absolute inset-0 bg-gradient-to-b from-paper/95 from-0% via-paper/92 via-65% to-transparent to-100%"
+    >
+    </div>
+  </div>
+
+  <div class="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:py-24">
+    <div
+      class="flex flex-col items-center gap-8 sm:flex-row sm:items-center sm:justify-between sm:gap-10"
     >
       <div class="max-w-xl sm:order-1">
         <!-- 幅が足りない画面では自然に2行へ折り返す（JSは2行を超えたときだけ縮小） -->
@@ -49,15 +73,14 @@ const prefix = localePath(locale);
         </div>
       </div>
 
-      <!-- 写真：PCは右の余白に収める（伸ばさない・切り抜かない）。
-           スマホは上下端をフェザーして背景になじませる（hero-photo-fadeはsm未満のみ有効） -->
-      <div class="hero-photo-fade w-48 shrink-0 sm:order-2 sm:w-auto sm:self-end">
+      <!-- PC用：右側に大きく、頭から腰あたりまでのクロップ（sm未満では非表示） -->
+      <div class="hidden shrink-0 sm:order-2 sm:block sm:w-72 md:w-96 lg:w-[28rem]">
         <Image
           src={heroPhoto}
-          alt={dict.hero.photoAlt ?? 'ネルソン水嶋'}
-          widths={[320, 480, 640]}
-          sizes="(min-width: 640px) 320px, 192px"
-          class="h-auto w-full object-contain sm:h-80 sm:w-auto md:h-96"
+          alt={photoAlt}
+          widths={[480, 640, 896]}
+          sizes="(min-width: 1024px) 28rem, (min-width: 640px) 24rem, 0px"
+          class="aspect-[4/5] w-full rounded-2xl object-cover object-top"
           loading="eager"
           fetchpriority="high"
         />
@@ -67,25 +90,10 @@ const prefix = localePath(locale);
 </section>
 
 <style>
-  /* スマホのみ：写真の四辺を紙色へ楕円形にフェザーし、四角い切り抜き感をなくす
-     （上下だけだと左右に硬い輪郭が残るため、全周をぼかす） */
+  /* スマホのみ：写真の四辺を紙色へ楕円形にフェザーし、四角い切り抜き感をなくす */
   .hero-photo-fade {
-    -webkit-mask-image: radial-gradient(
-      ellipse 68% 62% at 50% 42%,
-      black 45%,
-      transparent 92%
-    );
-    mask-image: radial-gradient(
-      ellipse 68% 62% at 50% 42%,
-      black 45%,
-      transparent 92%
-    );
-  }
-  @media (min-width: 640px) {
-    .hero-photo-fade {
-      -webkit-mask-image: none;
-      mask-image: none;
-    }
+    -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 30%, black 50%, transparent 95%);
+    mask-image: radial-gradient(ellipse 75% 70% at 50% 30%, black 50%, transparent 95%);
   }
 </style>
 
