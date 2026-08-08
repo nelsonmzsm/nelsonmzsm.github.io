@@ -1,7 +1,8 @@
 ---
 import { Image } from 'astro:assets';
 import { getDict, localePath, type Locale } from '../i18n';
-import heroBg from '../assets/hero-bg.jpg';
+import heroCover from '../assets/hero-cover.png';
+import heroCoverSp from '../assets/hero-cover-sp.jpg';
 
 interface Props {
   locale: Locale;
@@ -19,20 +20,33 @@ const prefix = localePath(locale);
   写真の明るい部分と文字が重なってもコントラストが落ちないようにする。
   文字（白＋強めのtext-shadow）は常にオーバーレイの上に乗るので、
   「文字と写真の境界がはっきりしている」状態を保てる（スマホ／PC共通の構成）。
-  写真の差し替えは src/assets/hero-bg.jpg。
+  写真はPC/スマホで別カット（PCは人物右寄りの横長カット、スマホは人物中央の縦長カット）。
+  差し替えは src/assets/hero-cover.png（PC）／hero-cover-sp.jpg（スマホ）。
 -->
 <section class="relative overflow-hidden">
   <div aria-hidden="true" class="absolute inset-0 overflow-hidden">
     <!-- 背景写真：じわーっとズーム（kenburns）＋スクロールに遅れてついてくるパララックス。
-         上下対称に-40ずつ延ばすことで、写真の中央がヒーローの中央に来る
-         （上だけ延ばすと写真の上部が見切れる）。延長ぶんはパララックス移動時の見切れ防止も兼ねる -->
-    <div class="hero-parallax absolute inset-x-0 -top-40 -bottom-40 will-change-transform">
+         上下対称に延ばすことで、写真の中央がヒーローの中央に来る
+         （上だけ延ばすと写真の上部が見切れる）。延長ぶんはパララックス移動時の見切れ防止も兼ねる。
+         延ばし幅は-40だと今回の人物カット（顔が上端寄り）で頭が切れてしまうため、-4まで縮小 -->
+    <div class="hero-parallax absolute inset-x-0 -top-4 -bottom-4 will-change-transform">
+      <!-- PC：横長カット。人物が右寄りなので、クロップ時も右側（人物）を優先して残す -->
       <Image
-        src={heroBg}
+        src={heroCover}
         alt=""
-        widths={[640, 960, 1920]}
+        widths={[960, 1440, 1920]}
         sizes="100vw"
-        class="kenburns h-full w-full object-cover"
+        class="kenburns hidden h-full w-full object-cover object-right sm:block"
+        loading="eager"
+        fetchpriority="high"
+      />
+      <!-- スマホ：縦長カット。人物が中央いっぱいに写っているのでそのまま中央基準でcover -->
+      <Image
+        src={heroCoverSp}
+        alt=""
+        widths={[480, 768, 960]}
+        sizes="100vw"
+        class="kenburns h-full w-full object-cover sm:hidden"
         loading="eager"
         fetchpriority="high"
       />
